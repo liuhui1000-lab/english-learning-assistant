@@ -1,0 +1,2695 @@
+[
+  {
+    "number": "1",
+    "baseWord": "able",
+    "baseMeaning": "能够的",
+    "transformations": [
+      {
+        "word": "unable",
+        "type": "adj.",
+        "meaning": "不能够的"
+      },
+      {
+        "word": "enable",
+        "type": "v.",
+        "meaning": "使能够"
+      },
+      {
+        "word": "ability",
+        "type": "n.",
+        "meaning": "能力"
+      },
+      {
+        "word": "disabled",
+        "type": "adj.",
+        "meaning": "残"
+      }
+    ]
+  },
+  {
+    "number": "2",
+    "baseWord": "accept",
+    "baseMeaning": "接受",
+    "transformations": [
+      {
+        "word": "acceptable",
+        "type": "adj.",
+        "meaning": "可接受的；认可的"
+      }
+    ]
+  },
+  {
+    "number": "3",
+    "baseWord": "accident",
+    "baseMeaning": "事故",
+    "transformations": []
+  },
+  {
+    "number": "4",
+    "baseWord": "accurate",
+    "baseMeaning": "精确地",
+    "transformations": [
+      {
+        "word": "accuracy",
+        "type": "n.",
+        "meaning": "精确度"
+      }
+    ]
+  },
+  {
+    "number": "7",
+    "baseWord": "act",
+    "baseMeaning": "演员",
+    "transformations": [
+      {
+        "word": "action",
+        "type": "n.",
+        "meaning": "行动；动作"
+      },
+      {
+        "word": "active",
+        "type": "adj.",
+        "meaning": "积极的;"
+      }
+    ]
+  },
+  {
+    "number": "9",
+    "baseWord": "add",
+    "baseMeaning": "增加",
+    "transformations": [
+      {
+        "word": "addition",
+        "type": "n.",
+        "meaning": "增加"
+      }
+    ]
+  },
+  {
+    "number": "13",
+    "baseWord": "advertise",
+    "baseMeaning": "为...做广告",
+    "transformations": [
+      {
+        "word": "advertisement",
+        "type": "n.",
+        "meaning": "广告"
+      }
+    ]
+  },
+  {
+    "number": "14",
+    "baseWord": "adventure",
+    "baseMeaning": "冒险－adventurous（adj.）敢于冒险的",
+    "transformations": []
+  },
+  {
+    "number": "15",
+    "baseWord": "advice",
+    "baseMeaning": "建议",
+    "transformations": [
+      {
+        "word": "advise",
+        "type": "v.",
+        "meaning": "建议"
+      }
+    ]
+  },
+  {
+    "number": "16",
+    "baseWord": "Africa",
+    "baseMeaning": "非洲",
+    "transformations": []
+  },
+  {
+    "number": "17",
+    "baseWord": "agent",
+    "baseMeaning": "代理人－agency (n.）代理社",
+    "transformations": []
+  },
+  {
+    "number": "19",
+    "baseWord": "agree",
+    "baseMeaning": "同意",
+    "transformations": [
+      {
+        "word": "disagree",
+        "type": "v.",
+        "meaning": "不同意"
+      },
+      {
+        "word": "agreement",
+        "type": "n.",
+        "meaning": "赞同"
+      }
+    ]
+  },
+  {
+    "number": "22",
+    "baseWord": "ambition",
+    "baseMeaning": "雄心",
+    "transformations": []
+  },
+  {
+    "number": "23",
+    "baseWord": "America",
+    "baseMeaning": "美国",
+    "transformations": [
+      {
+        "word": "American",
+        "type": "n./adj.",
+        "meaning": ""
+      }
+    ]
+  },
+  {
+    "number": "24",
+    "baseWord": "amuse",
+    "baseMeaning": "逗人发笑的",
+    "transformations": [
+      {
+        "word": "amused",
+        "type": "adj.",
+        "meaning": "被逗乐的"
+      }
+    ]
+  },
+  {
+    "number": "25",
+    "baseWord": "anger",
+    "baseMeaning": "怒气；怒火",
+    "transformations": [
+      {
+        "word": "angry",
+        "type": "adj.",
+        "meaning": "生气的"
+      },
+      {
+        "word": "angrily",
+        "type": "adv.",
+        "meaning": "生气地"
+      }
+    ]
+  },
+  {
+    "number": "27",
+    "baseWord": "appear",
+    "baseMeaning": "消失",
+    "transformations": [
+      {
+        "word": "disappearance",
+        "type": "n.",
+        "meaning": "消失"
+      }
+    ]
+  },
+  {
+    "number": "28",
+    "baseWord": "apply",
+    "baseMeaning": "器具",
+    "transformations": []
+  },
+  {
+    "number": "31",
+    "baseWord": "arrive",
+    "baseMeaning": "",
+    "transformations": [
+      {
+        "word": "arrival",
+        "type": "n.",
+        "meaning": "到达"
+      }
+    ]
+  },
+  {
+    "number": "34",
+    "baseWord": "assist",
+    "baseMeaning": "助手－assistance(n.）帮助",
+    "transformations": []
+  },
+  {
+    "number": "37",
+    "baseWord": "Australia",
+    "baseMeaning": "澳大利亚",
+    "transformations": [
+      {
+        "word": "Australian",
+        "type": "adj.n.",
+        "meaning": "澳大利亚的；澳大利亚人"
+      }
+    ]
+  },
+  {
+    "number": "39",
+    "baseWord": "avail",
+    "baseMeaning": "利于；有益于(n.)效用；利益",
+    "transformations": [
+      {
+        "word": "available",
+        "type": "adj.",
+        "meaning": "可获得的；可利用的；有空的"
+      }
+    ]
+  },
+  {
+    "number": "42",
+    "baseWord": "bake",
+    "baseMeaning": "烘焙坊",
+    "transformations": []
+  },
+  {
+    "number": "44",
+    "baseWord": "base",
+    "baseMeaning": "基础的",
+    "transformations": []
+  },
+  {
+    "number": "48",
+    "baseWord": "begin",
+    "baseMeaning": "开始",
+    "transformations": [
+      {
+        "word": "beginning",
+        "type": "n.",
+        "meaning": "开始；开端"
+      }
+    ]
+  },
+  {
+    "number": "49",
+    "baseWord": "behave",
+    "baseMeaning": "表现",
+    "transformations": [
+      {
+        "word": "behaviour",
+        "type": "n.",
+        "meaning": "行为"
+      }
+    ]
+  },
+  {
+    "number": "52",
+    "baseWord": "boil",
+    "baseMeaning": "煮",
+    "transformations": [
+      {
+        "word": "boiling",
+        "type": "adj",
+        "meaning": "沸腾的"
+      },
+      {
+        "word": "boiled",
+        "type": "adj.",
+        "meaning": "煮熟的 (沸过)"
+      }
+    ]
+  },
+  {
+    "number": "53",
+    "baseWord": "bore",
+    "baseMeaning": "无聊的",
+    "transformations": [
+      {
+        "word": "bored",
+        "type": "adj.",
+        "meaning": "感到无聊的"
+      }
+    ]
+  },
+  {
+    "number": "54",
+    "baseWord": "brave",
+    "baseMeaning": "勇敢地",
+    "transformations": []
+  },
+  {
+    "number": "56",
+    "baseWord": "brief",
+    "baseMeaning": "短暂的；简短的",
+    "transformations": []
+  },
+  {
+    "number": "57",
+    "baseWord": "bright",
+    "baseMeaning": "明亮地；鲜明地",
+    "transformations": []
+  },
+  {
+    "number": "61",
+    "baseWord": "call",
+    "baseMeaning": "被叫做·…·的",
+    "transformations": []
+  },
+  {
+    "number": "62",
+    "baseWord": "camp",
+    "baseMeaning": "营地(v.)野营，露营",
+    "transformations": []
+  },
+  {
+    "number": "64",
+    "baseWord": "care",
+    "baseMeaning": "关心；介意；照料",
+    "transformations": [
+      {
+        "word": "careful",
+        "type": "adj.",
+        "meaning": "小心的；仔细的"
+      },
+      {
+        "word": "careless",
+        "type": "adj.",
+        "meaning": "粗心的"
+      }
+    ]
+  },
+  {
+    "number": "65",
+    "baseWord": "cartoon",
+    "baseMeaning": "漫画",
+    "transformations": [
+      {
+        "word": "cartoonist",
+        "type": "n.",
+        "meaning": "漫画家"
+      }
+    ]
+  },
+  {
+    "number": "66",
+    "baseWord": "celebrate",
+    "baseMeaning": "庆祝",
+    "transformations": [
+      {
+        "word": "celebration",
+        "type": "n.",
+        "meaning": "庆祝"
+      }
+    ]
+  },
+  {
+    "number": "75",
+    "baseWord": "choose",
+    "baseMeaning": "选择",
+    "transformations": []
+  },
+  {
+    "number": "84",
+    "baseWord": "complain",
+    "baseMeaning": "抱怨",
+    "transformations": []
+  },
+  {
+    "number": "87",
+    "baseWord": "conduct",
+    "baseMeaning": "指挥",
+    "transformations": []
+  },
+  {
+    "number": "89",
+    "baseWord": "confuse",
+    "baseMeaning": "感到困惑的",
+    "transformations": [
+      {
+        "word": "confusing",
+        "type": "adj.",
+        "meaning": "令人困惑的"
+      }
+    ]
+  },
+  {
+    "number": "92",
+    "baseWord": "convenient",
+    "baseMeaning": "不方便的－convenience(n.)便利",
+    "transformations": []
+  },
+  {
+    "number": "93",
+    "baseWord": "cook",
+    "baseMeaning": "烹饪",
+    "transformations": []
+  },
+  {
+    "number": "94",
+    "baseWord": "cool",
+    "baseMeaning": "凉爽的(v.）冷却",
+    "transformations": [
+      {
+        "word": "coolness",
+        "type": "n.",
+        "meaning": "冷漠"
+      }
+    ]
+  },
+  {
+    "number": "97",
+    "baseWord": "count",
+    "baseMeaning": "可数的",
+    "transformations": []
+  },
+  {
+    "number": "99",
+    "baseWord": "create",
+    "baseMeaning": "创造",
+    "transformations": [
+      {
+        "word": "creative",
+        "type": "adj.",
+        "meaning": "有创造力的"
+      },
+      {
+        "word": "creator",
+        "type": "n.",
+        "meaning": "创造者"
+      }
+    ]
+  },
+  {
+    "number": "101",
+    "baseWord": "crowd",
+    "baseMeaning": "人群；拥挤",
+    "transformations": [
+      {
+        "word": "crowed",
+        "type": "adj.",
+        "meaning": "拥挤的"
+      }
+    ]
+  },
+  {
+    "number": "102",
+    "baseWord": "culture",
+    "baseMeaning": "文化的",
+    "transformations": []
+  },
+  {
+    "number": "105",
+    "baseWord": "dark",
+    "baseMeaning": "黑暗的",
+    "transformations": []
+  },
+  {
+    "number": "106",
+    "baseWord": "die",
+    "baseMeaning": "死亡的",
+    "transformations": [
+      {
+        "word": "dead",
+        "type": "adj.",
+        "meaning": "无生命的"
+      },
+      {
+        "word": "death",
+        "type": "n.",
+        "meaning": "死亡"
+      }
+    ]
+  },
+  {
+    "number": "108",
+    "baseWord": "decorate",
+    "baseMeaning": "装饰",
+    "transformations": []
+  },
+  {
+    "number": "109",
+    "baseWord": "deep",
+    "baseMeaning": "深的,厚的",
+    "transformations": [
+      {
+        "word": "deeply",
+        "type": "adv.",
+        "meaning": "很；深沉地"
+      },
+      {
+        "word": "depth",
+        "type": "n.",
+        "meaning": "深度"
+      }
+    ]
+  },
+  {
+    "number": "110",
+    "baseWord": "deliver",
+    "baseMeaning": "递送",
+    "transformations": [
+      {
+        "word": "delivery",
+        "type": "n.",
+        "meaning": "递送；送货"
+      }
+    ]
+  },
+  {
+    "number": "113",
+    "baseWord": "depend",
+    "baseMeaning": "独立的",
+    "transformations": []
+  },
+  {
+    "number": "118",
+    "baseWord": "develop",
+    "baseMeaning": "发展中的",
+    "transformations": [
+      {
+        "word": "developed",
+        "type": "adj.",
+        "meaning": "发达的"
+      },
+      {
+        "word": "development",
+        "type": "n.",
+        "meaning": ""
+      }
+    ]
+  },
+  {
+    "number": "119",
+    "baseWord": "different",
+    "baseMeaning": "不同的",
+    "transformations": []
+  },
+  {
+    "number": "121",
+    "baseWord": "direct",
+    "baseMeaning": "直接的；指导",
+    "transformations": [
+      {
+        "word": "directly",
+        "type": "adv.",
+        "meaning": "直接地"
+      },
+      {
+        "word": "director",
+        "type": "n.",
+        "meaning": "导演"
+      }
+    ]
+  },
+  {
+    "number": "122",
+    "baseWord": "dirt",
+    "baseMeaning": "脏",
+    "transformations": []
+  },
+  {
+    "number": "124",
+    "baseWord": "disappoint",
+    "baseMeaning": "令人失望的",
+    "transformations": [
+      {
+        "word": "disappointed",
+        "type": "adj.",
+        "meaning": "感到失望的"
+      }
+    ]
+  },
+  {
+    "number": "126",
+    "baseWord": "discover",
+    "baseMeaning": "发现",
+    "transformations": []
+  },
+  {
+    "number": "127",
+    "baseWord": "discuss",
+    "baseMeaning": "讨论",
+    "transformations": []
+  },
+  {
+    "number": "128",
+    "baseWord": "honest",
+    "baseMeaning": "诚实的",
+    "transformations": [
+      {
+        "word": "honesty",
+        "type": "n.",
+        "meaning": "诚实"
+      },
+      {
+        "word": "dishonest",
+        "type": "adj.",
+        "meaning": "不诚实的"
+      }
+    ]
+  },
+  {
+    "number": "134",
+    "baseWord": "easy",
+    "baseMeaning": "简单的；容易的",
+    "transformations": [
+      {
+        "word": "easily",
+        "type": "adv.",
+        "meaning": ""
+      },
+      {
+        "word": "ease",
+        "type": "v./n.",
+        "meaning": "缓解；舒适"
+      }
+    ]
+  },
+  {
+    "number": "135",
+    "baseWord": "economy",
+    "baseMeaning": "经济的",
+    "transformations": [
+      {
+        "word": "economical",
+        "type": "adj.",
+        "meaning": "节约的"
+      },
+      {
+        "word": "economics",
+        "type": "n.",
+        "meaning": "经济学"
+      }
+    ]
+  },
+  {
+    "number": "136",
+    "baseWord": "educate",
+    "baseMeaning": "教育－educational(adj.)教育的；有教育意义的",
+    "transformations": []
+  },
+  {
+    "number": "137",
+    "baseWord": "effect",
+    "baseMeaning": "效果",
+    "transformations": []
+  },
+  {
+    "number": "142",
+    "baseWord": "energy",
+    "baseMeaning": "精力充沛的",
+    "transformations": []
+  },
+  {
+    "number": "143",
+    "baseWord": "engine",
+    "baseMeaning": "引擎",
+    "transformations": [
+      {
+        "word": "engineer",
+        "type": "n.",
+        "meaning": "工程师"
+      }
+    ]
+  },
+  {
+    "number": "145",
+    "baseWord": "rich",
+    "baseMeaning": "使丰富",
+    "transformations": []
+  },
+  {
+    "number": "146",
+    "baseWord": "enter",
+    "baseMeaning": "进入",
+    "transformations": [
+      {
+        "word": "entrance",
+        "type": "n.",
+        "meaning": "入口"
+      }
+    ]
+  },
+  {
+    "number": "147",
+    "baseWord": "environment",
+    "baseMeaning": "环境的",
+    "transformations": [
+      {
+        "word": "environmentally",
+        "type": "adv.",
+        "meaning": ""
+      }
+    ]
+  },
+  {
+    "number": "149",
+    "baseWord": "Europe",
+    "baseMeaning": "欧洲",
+    "transformations": []
+  },
+  {
+    "number": "152",
+    "baseWord": "excite",
+    "baseMeaning": "感到激动的",
+    "transformations": []
+  },
+  {
+    "number": "157",
+    "baseWord": "experiment",
+    "baseMeaning": "试验",
+    "transformations": []
+  },
+  {
+    "number": "158",
+    "baseWord": "explain",
+    "baseMeaning": "解释",
+    "transformations": []
+  },
+  {
+    "number": "161",
+    "baseWord": "face",
+    "baseMeaning": "脸，面孔(v.）面对",
+    "transformations": [
+      {
+        "word": "facial",
+        "type": "adj.",
+        "meaning": "面部的"
+      }
+    ]
+  },
+  {
+    "number": "162",
+    "baseWord": "fail",
+    "baseMeaning": "失败；不及格",
+    "transformations": []
+  },
+  {
+    "number": "164",
+    "baseWord": "farm",
+    "baseMeaning": "农场，农庄(v.）耕作",
+    "transformations": [
+      {
+        "word": "farmer",
+        "type": "n.",
+        "meaning": "农民"
+      }
+    ]
+  },
+  {
+    "number": "169",
+    "baseWord": "female",
+    "baseMeaning": "女性的；雌性的",
+    "transformations": []
+  },
+  {
+    "number": "170",
+    "baseWord": "fever",
+    "baseMeaning": "发烧；发热",
+    "transformations": []
+  },
+  {
+    "number": "172",
+    "baseWord": "final",
+    "baseMeaning": "最终的；终极的",
+    "transformations": []
+  },
+  {
+    "number": "174",
+    "baseWord": "fire",
+    "baseMeaning": "火；火灾（v.)开火；射击",
+    "transformations": []
+  },
+  {
+    "number": "177",
+    "baseWord": "follow",
+    "baseMeaning": "跟随；遵守",
+    "transformations": []
+  },
+  {
+    "number": "178",
+    "baseWord": "fool",
+    "baseMeaning": "傻子，愚弄",
+    "transformations": [
+      {
+        "word": "foolish",
+        "type": "adj.",
+        "meaning": "愚蠢的"
+      }
+    ]
+  },
+  {
+    "number": "179",
+    "baseWord": "foreign",
+    "baseMeaning": "外国的；外来的",
+    "transformations": []
+  },
+  {
+    "number": "181",
+    "baseWord": "France",
+    "baseMeaning": "法国",
+    "transformations": [
+      {
+        "word": "French",
+        "type": "adj./n.",
+        "meaning": "法国的；法语的；法语；法国人"
+      }
+    ]
+  },
+  {
+    "number": "182",
+    "baseWord": "free",
+    "baseMeaning": "自由的；免费的；空闲的",
+    "transformations": [
+      {
+        "word": "freely",
+        "type": "adv.",
+        "meaning": ""
+      },
+      {
+        "word": "freedom",
+        "type": "n.",
+        "meaning": "自由"
+      }
+    ]
+  },
+  {
+    "number": "184",
+    "baseWord": "friend",
+    "baseMeaning": "朋友",
+    "transformations": [
+      {
+        "word": "friendly",
+        "type": "adj.",
+        "meaning": "友好的"
+      },
+      {
+        "word": "friendship",
+        "type": "n.",
+        "meaning": "友谊"
+      }
+    ]
+  },
+  {
+    "number": "186",
+    "baseWord": "fun",
+    "baseMeaning": "乐趣；娱乐；令人愉快的",
+    "transformations": [
+      {
+        "word": "funny",
+        "type": "adj.",
+        "meaning": "滑稽的；可笑的"
+      }
+    ]
+  },
+  {
+    "number": "190",
+    "baseWord": "gentle",
+    "baseMeaning": "温柔的；轻轻的",
+    "transformations": [
+      {
+        "word": "gently",
+        "type": "adv.",
+        "meaning": "轻柔地"
+      }
+    ]
+  },
+  {
+    "number": "191",
+    "baseWord": "German",
+    "baseMeaning": "德国人；德语；德国的",
+    "transformations": [
+      {
+        "word": "Germany",
+        "type": "n.",
+        "meaning": "德国"
+      }
+    ]
+  },
+  {
+    "number": "192",
+    "baseWord": "glad",
+    "baseMeaning": "乐意地；高兴地",
+    "transformations": []
+  },
+  {
+    "number": "194",
+    "baseWord": "gold",
+    "baseMeaning": "黄金",
+    "transformations": []
+  },
+  {
+    "number": "198",
+    "baseWord": "grow",
+    "baseMeaning": "生长；种植",
+    "transformations": []
+  },
+  {
+    "number": "199",
+    "baseWord": "happy",
+    "baseMeaning": "开心的",
+    "transformations": [
+      {
+        "word": "happily",
+        "type": "adv.",
+        "meaning": "开心地"
+      },
+      {
+        "word": "happiness",
+        "type": "n.",
+        "meaning": "快乐,幸福"
+      },
+      {
+        "word": "unhappy",
+        "type": "adj.",
+        "meaning": "不开心的"
+      }
+    ]
+  },
+  {
+    "number": "200",
+    "baseWord": "hard",
+    "baseMeaning": "困难的(地)；努力的(地)；硬的(地)",
+    "transformations": [
+      {
+        "word": "hardly",
+        "type": "adv.",
+        "meaning": "几乎不"
+      }
+    ]
+  },
+  {
+    "number": "201",
+    "baseWord": "harm",
+    "baseMeaning": "伤害，损害",
+    "transformations": []
+  },
+  {
+    "number": "202",
+    "baseWord": "health",
+    "baseMeaning": "健康",
+    "transformations": [
+      {
+        "word": "healthy",
+        "type": "adj.",
+        "meaning": "健康的"
+      },
+      {
+        "word": "unhealthy",
+        "type": "adj.",
+        "meaning": "不健康的"
+      }
+    ]
+  },
+  {
+    "number": "204",
+    "baseWord": "heavy",
+    "baseMeaning": "沉重的",
+    "transformations": [
+      {
+        "word": "heavily",
+        "type": "adv.",
+        "meaning": "沉重地"
+      }
+    ]
+  },
+  {
+    "number": "205",
+    "baseWord": "help",
+    "baseMeaning": "帮助；帮忙",
+    "transformations": [
+      {
+        "word": "helpful",
+        "type": "adj.",
+        "meaning": "有帮助的"
+      },
+      {
+        "word": "helpless",
+        "type": "adj.",
+        "meaning": "无助的；没有帮助的"
+      }
+    ]
+  },
+  {
+    "number": "208",
+    "baseWord": "home",
+    "baseMeaning": "家(adv.）在家；到家；回家",
+    "transformations": [
+      {
+        "word": "homeless",
+        "type": "adj",
+        "meaning": "无家可归的"
+      }
+    ]
+  },
+  {
+    "number": "210",
+    "baseWord": "honour",
+    "baseMeaning": "荣誉",
+    "transformations": []
+  },
+  {
+    "number": "211",
+    "baseWord": "hope",
+    "baseMeaning": "希望",
+    "transformations": [
+      {
+        "word": "hopeless",
+        "type": "adj.",
+        "meaning": "绝望的"
+      }
+    ]
+  },
+  {
+    "number": "213",
+    "baseWord": "host",
+    "baseMeaning": "主任；节目主持人",
+    "transformations": []
+  },
+  {
+    "number": "214",
+    "baseWord": "humour",
+    "baseMeaning": "幽默",
+    "transformations": []
+  },
+  {
+    "number": "215",
+    "baseWord": "hunger",
+    "baseMeaning": "饥饿",
+    "transformations": [
+      {
+        "word": "hungrily",
+        "type": "adv.",
+        "meaning": "饥饿地"
+      }
+    ]
+  },
+  {
+    "number": "221",
+    "baseWord": "important",
+    "baseMeaning": "重要性",
+    "transformations": [
+      {
+        "word": "importantly",
+        "type": "adv.",
+        "meaning": ""
+      }
+    ]
+  },
+  {
+    "number": "222",
+    "baseWord": "possible",
+    "baseMeaning": "可能的",
+    "transformations": [
+      {
+        "word": "possibly",
+        "type": "adv.",
+        "meaning": "可能"
+      },
+      {
+        "word": "impossible",
+        "type": "adj.",
+        "meaning": "不可能的"
+      },
+      {
+        "word": "possibility",
+        "type": "n.",
+        "meaning": "可能性"
+      }
+    ]
+  },
+  {
+    "number": "223",
+    "baseWord": "impress",
+    "baseMeaning": "给···深刻印象，使铭记",
+    "transformations": []
+  },
+  {
+    "number": "225",
+    "baseWord": "include",
+    "baseMeaning": "包含，包含物",
+    "transformations": []
+  },
+  {
+    "number": "227",
+    "baseWord": "instruct",
+    "baseMeaning": "指示；指导；通知",
+    "transformations": []
+  },
+  {
+    "number": "228",
+    "baseWord": "nation",
+    "baseMeaning": "国家",
+    "transformations": [
+      {
+        "word": "national",
+        "type": "adj.",
+        "meaning": "国家的"
+      },
+      {
+        "word": "international",
+        "type": "adj.",
+        "meaning": "国际的"
+      },
+      {
+        "word": "nationality",
+        "type": "n.",
+        "meaning": "国籍"
+      }
+    ]
+  },
+  {
+    "number": "231",
+    "baseWord": "invent",
+    "baseMeaning": "发明",
+    "transformations": [
+      {
+        "word": "inventor",
+        "type": "n.",
+        "meaning": "发明家；创造者"
+      }
+    ]
+  },
+  {
+    "number": "232",
+    "baseWord": "investigate",
+    "baseMeaning": "调查",
+    "transformations": []
+  },
+  {
+    "number": "233",
+    "baseWord": "invite",
+    "baseMeaning": "邀请",
+    "transformations": []
+  },
+  {
+    "number": "234",
+    "baseWord": "Italy",
+    "baseMeaning": "意大利",
+    "transformations": []
+  },
+  {
+    "number": "237",
+    "baseWord": "judge",
+    "baseMeaning": "判断；裁判",
+    "transformations": [
+      {
+        "word": "judgement",
+        "type": "n.",
+        "meaning": "判断；判断力"
+      }
+    ]
+  },
+  {
+    "number": "238",
+    "baseWord": "kill",
+    "baseMeaning": "杀死；消磨",
+    "transformations": [
+      {
+        "word": "killer",
+        "type": "n.",
+        "meaning": "杀手"
+      }
+    ]
+  },
+  {
+    "number": "239",
+    "baseWord": "kind",
+    "baseMeaning": "种类(adj.)善良的；友好的=friendly",
+    "transformations": [
+      {
+        "word": "unkind",
+        "type": "adj.",
+        "meaning": "不友善的"
+      },
+      {
+        "word": "kindness",
+        "type": "n.",
+        "meaning": "仁慈；好意"
+      }
+    ]
+  },
+  {
+    "number": "240",
+    "baseWord": "king",
+    "baseMeaning": "国王",
+    "transformations": [
+      {
+        "word": "kingdom",
+        "type": "n.",
+        "meaning": "王国"
+      }
+    ]
+  },
+  {
+    "number": "241",
+    "baseWord": "know",
+    "baseMeaning": "v.知道；了解；认识",
+    "transformations": [
+      {
+        "word": "known",
+        "type": "adj.",
+        "meaning": "已知的"
+      }
+    ]
+  },
+  {
+    "number": "242",
+    "baseWord": "late",
+    "baseMeaning": "迟的；晚的",
+    "transformations": [
+      {
+        "word": "later",
+        "type": "adj.",
+        "meaning": "后来"
+      },
+      {
+        "word": "latest",
+        "type": "adj",
+        "meaning": "最新的"
+      }
+    ]
+  },
+  {
+    "number": "243",
+    "baseWord": "laugh",
+    "baseMeaning": "大笑；嘲笑",
+    "transformations": [
+      {
+        "word": "laughter",
+        "type": "n.",
+        "meaning": "笑声"
+      }
+    ]
+  },
+  {
+    "number": "245",
+    "baseWord": "lazy",
+    "baseMeaning": "懒惰的",
+    "transformations": [
+      {
+        "word": "lazily",
+        "type": "adv.",
+        "meaning": "懒惰地"
+      },
+      {
+        "word": "laziness",
+        "type": "n.",
+        "meaning": "懒惰"
+      }
+    ]
+  },
+  {
+    "number": "246",
+    "baseWord": "lead",
+    "baseMeaning": "v.领导；带领",
+    "transformations": []
+  },
+  {
+    "number": "247",
+    "baseWord": "learn",
+    "baseMeaning": "学习；学会",
+    "transformations": [
+      {
+        "word": "learner",
+        "type": "n.",
+        "meaning": "学习者"
+      }
+    ]
+  },
+  {
+    "number": "250",
+    "baseWord": "library",
+    "baseMeaning": "图书馆",
+    "transformations": [
+      {
+        "word": "librarian",
+        "type": "n.",
+        "meaning": "图书管理员"
+      }
+    ]
+  },
+  {
+    "number": "252",
+    "baseWord": "locate",
+    "baseMeaning": "确定·…...·的地点",
+    "transformations": [
+      {
+        "word": "location",
+        "type": "n.",
+        "meaning": "位置；场所"
+      }
+    ]
+  },
+  {
+    "number": "253",
+    "baseWord": "loud",
+    "baseMeaning": "大声的",
+    "transformations": []
+  },
+  {
+    "number": "254",
+    "baseWord": "love",
+    "baseMeaning": "可爱的",
+    "transformations": []
+  },
+  {
+    "number": "255",
+    "baseWord": "luck",
+    "baseMeaning": "幸运的",
+    "transformations": [
+      {
+        "word": "unlucky",
+        "type": "adj.",
+        "meaning": "不幸的"
+      },
+      {
+        "word": "luckily",
+        "type": "adv.",
+        "meaning": ""
+      },
+      {
+        "word": "unluckily",
+        "type": "adv.",
+        "meaning": ""
+      }
+    ]
+  },
+  {
+    "number": "256",
+    "baseWord": "magic",
+    "baseMeaning": "魔术；有魔法的",
+    "transformations": [
+      {
+        "word": "magically",
+        "type": "adv.",
+        "meaning": "魔法般的"
+      }
+    ]
+  },
+  {
+    "number": "258",
+    "baseWord": "major",
+    "baseMeaning": "大多数",
+    "transformations": []
+  },
+  {
+    "number": "259",
+    "baseWord": "male",
+    "baseMeaning": "男性；雄性",
+    "transformations": [
+      {
+        "word": "female",
+        "type": "adj.",
+        "meaning": "女性；雌性"
+      }
+    ]
+  },
+  {
+    "number": "260",
+    "baseWord": "manage",
+    "baseMeaning": "管理",
+    "transformations": [
+      {
+        "word": "manager",
+        "type": "n.",
+        "meaning": "经理"
+      }
+    ]
+  },
+  {
+    "number": "261",
+    "baseWord": "marry",
+    "baseMeaning": "婚姻",
+    "transformations": []
+  },
+  {
+    "number": "262",
+    "baseWord": "mean",
+    "baseMeaning": "意思是，意味着(adj.)刻薄的",
+    "transformations": [
+      {
+        "word": "meaning",
+        "type": "n.",
+        "meaning": "意义；含义"
+      },
+      {
+        "word": "meaningful",
+        "type": "adj.",
+        "meaning": "有意"
+      }
+    ]
+  },
+  {
+    "number": "263",
+    "baseWord": "medical",
+    "baseMeaning": "药",
+    "transformations": []
+  },
+  {
+    "number": "264",
+    "baseWord": "meet",
+    "baseMeaning": "遇见；满足 (n.)集会",
+    "transformations": [
+      {
+        "word": "meeting",
+        "type": "v.",
+        "meaning": "会议"
+      }
+    ]
+  },
+  {
+    "number": "265",
+    "baseWord": "memory",
+    "baseMeaning": "回忆；记忆",
+    "transformations": [
+      {
+        "word": "memorize",
+        "type": "v.",
+        "meaning": "纪念"
+      }
+    ]
+  },
+  {
+    "number": "267",
+    "baseWord": "miss",
+    "baseMeaning": "失踪的",
+    "transformations": []
+  },
+  {
+    "number": "268",
+    "baseWord": "mix",
+    "baseMeaning": "混合，搅拌",
+    "transformations": []
+  },
+  {
+    "number": "269",
+    "baseWord": "month",
+    "baseMeaning": "月",
+    "transformations": [
+      {
+        "word": "monthly",
+        "type": "adj./adv.",
+        "meaning": "每月的"
+      }
+    ]
+  },
+  {
+    "number": "270",
+    "baseWord": "mountain",
+    "baseMeaning": "山；山脉",
+    "transformations": [
+      {
+        "word": "mountainous",
+        "type": "adj.",
+        "meaning": "多山的"
+      }
+    ]
+  },
+  {
+    "number": "271",
+    "baseWord": "mouse",
+    "baseMeaning": "老鼠；鼠标",
+    "transformations": [
+      {
+        "word": "mice",
+        "type": "复数",
+        "meaning": ""
+      }
+    ]
+  },
+  {
+    "number": "272",
+    "baseWord": "move",
+    "baseMeaning": "移动",
+    "transformations": [
+      {
+        "word": "remove",
+        "type": "v.",
+        "meaning": "移走；挪开"
+      },
+      {
+        "word": "moved",
+        "type": "adj.",
+        "meaning": "感动的"
+      }
+    ]
+  },
+  {
+    "number": "273",
+    "baseWord": "music",
+    "baseMeaning": "音乐",
+    "transformations": [
+      {
+        "word": "musical",
+        "type": "adj.",
+        "meaning": "音乐的"
+      },
+      {
+        "word": "musician",
+        "type": "n.",
+        "meaning": "音乐家"
+      }
+    ]
+  },
+  {
+    "number": "274",
+    "baseWord": "name",
+    "baseMeaning": "名字；姓名（v.)命名",
+    "transformations": [
+      {
+        "word": "named",
+        "type": "adj.",
+        "meaning": "名叫·……·的"
+      }
+    ]
+  },
+  {
+    "number": "277",
+    "baseWord": "need",
+    "baseMeaning": "需要 (n.)需求",
+    "transformations": [
+      {
+        "word": "necessary",
+        "type": "adj.",
+        "meaning": "必要的"
+      },
+      {
+        "word": "necessity",
+        "type": "n.",
+        "meaning": "必要；必需品"
+      }
+    ]
+  },
+  {
+    "number": "279",
+    "baseWord": "nervous",
+    "baseMeaning": "紧张的",
+    "transformations": [
+      {
+        "word": "nervously",
+        "type": "adv.",
+        "meaning": "紧张地"
+      },
+      {
+        "word": "nervousness",
+        "type": "n.",
+        "meaning": "紧张"
+      }
+    ]
+  },
+  {
+    "number": "280",
+    "baseWord": "noise",
+    "baseMeaning": "噪音",
+    "transformations": [
+      {
+        "word": "noisy",
+        "type": "adj.",
+        "meaning": "嘈杂的；喧闹的"
+      }
+    ]
+  },
+  {
+    "number": "282",
+    "baseWord": "obey",
+    "baseMeaning": "违反，违背=break",
+    "transformations": []
+  },
+  {
+    "number": "283",
+    "baseWord": "observe",
+    "baseMeaning": "观察",
+    "transformations": [
+      {
+        "word": "observer",
+        "type": "n.",
+        "meaning": "观察员"
+      },
+      {
+        "word": "observation",
+        "type": "n.",
+        "meaning": "观察"
+      }
+    ]
+  },
+  {
+    "number": "284",
+    "baseWord": "occupation",
+    "baseMeaning": "职业",
+    "transformations": [
+      {
+        "word": "occupy",
+        "type": "v.",
+        "meaning": "占据(用)、使忙碌"
+      }
+    ]
+  },
+  {
+    "number": "286",
+    "baseWord": "office",
+    "baseMeaning": "办公室",
+    "transformations": [
+      {
+        "word": "official",
+        "type": "adj.",
+        "meaning": "官方的(n.）官员"
+      },
+      {
+        "word": "officer",
+        "type": "n.",
+        "meaning": "官员"
+      }
+    ]
+  },
+  {
+    "number": "288",
+    "baseWord": "operate",
+    "baseMeaning": "操作；运行；手术－operation(n.）手术",
+    "transformations": []
+  },
+  {
+    "number": "289",
+    "baseWord": "organize",
+    "baseMeaning": "组织",
+    "transformations": []
+  },
+  {
+    "number": "290",
+    "baseWord": "own",
+    "baseMeaning": "物主",
+    "transformations": [
+      {
+        "word": "ownership",
+        "type": "n.",
+        "meaning": "所有权"
+      }
+    ]
+  },
+  {
+    "number": "291",
+    "baseWord": "pain",
+    "baseMeaning": "疼痛",
+    "transformations": [
+      {
+        "word": "painful",
+        "type": "adj.",
+        "meaning": ""
+      },
+      {
+        "word": "painless",
+        "type": "adj.",
+        "meaning": "无痛的"
+      }
+    ]
+  },
+  {
+    "number": "292",
+    "baseWord": "paint",
+    "baseMeaning": "油漆；粉刷；绘画；颜料+s",
+    "transformations": [
+      {
+        "word": "painting",
+        "type": "n.",
+        "meaning": "油画；水彩画"
+      },
+      {
+        "word": "painter",
+        "type": "n.",
+        "meaning": "画家"
+      }
+    ]
+  },
+  {
+    "number": "293",
+    "baseWord": "patient",
+    "baseMeaning": "耐心",
+    "transformations": [
+      {
+        "word": "impatient",
+        "type": "adj.",
+        "meaning": "不耐烦的"
+      }
+    ]
+  },
+  {
+    "number": "294",
+    "baseWord": "peace",
+    "baseMeaning": "和平",
+    "transformations": [
+      {
+        "word": "peaceful",
+        "type": "adj.",
+        "meaning": ""
+      }
+    ]
+  },
+  {
+    "number": "295",
+    "baseWord": "perform",
+    "baseMeaning": "表现；表演",
+    "transformations": [
+      {
+        "word": "performance",
+        "type": "n.",
+        "meaning": "表演；演出；行动"
+      },
+      {
+        "word": "performer",
+        "type": "n.",
+        "meaning": "表演者"
+      }
+    ]
+  },
+  {
+    "number": "296",
+    "baseWord": "person",
+    "baseMeaning": "个人",
+    "transformations": [
+      {
+        "word": "personal",
+        "type": "adj",
+        "meaning": "个人的；私人的"
+      },
+      {
+        "word": "personality",
+        "type": "n.",
+        "meaning": "个性"
+      }
+    ]
+  },
+  {
+    "number": "297",
+    "baseWord": "physics",
+    "baseMeaning": "物理（学）",
+    "transformations": [
+      {
+        "word": "physical",
+        "type": "adj.",
+        "meaning": "物理的；身体的"
+      }
+    ]
+  },
+  {
+    "number": "300",
+    "baseWord": "please",
+    "baseMeaning": "使高兴；使满意",
+    "transformations": [
+      {
+        "word": "pleased",
+        "type": "adj",
+        "meaning": "感到高兴的；感到满意的"
+      },
+      {
+        "word": "pleasant",
+        "type": "adj.",
+        "meaning": "令人愉"
+      }
+    ]
+  },
+  {
+    "number": "301",
+    "baseWord": "poem",
+    "baseMeaning": "诗",
+    "transformations": [
+      {
+        "word": "poet",
+        "type": "n.",
+        "meaning": "诗人"
+      }
+    ]
+  },
+  {
+    "number": "302",
+    "baseWord": "polite",
+    "baseMeaning": "礼貌的",
+    "transformations": [
+      {
+        "word": "politely",
+        "type": "adv.",
+        "meaning": "有礼貌地"
+      }
+    ]
+  },
+  {
+    "number": "303",
+    "baseWord": "pollute",
+    "baseMeaning": "污染",
+    "transformations": []
+  },
+  {
+    "number": "306",
+    "baseWord": "possible",
+    "baseMeaning": "可能的；也许的",
+    "transformations": []
+  },
+  {
+    "number": "308",
+    "baseWord": "power",
+    "baseMeaning": "强有力的；有影响力的",
+    "transformations": [
+      {
+        "word": "powerless",
+        "type": "adj.",
+        "meaning": "无力的"
+      }
+    ]
+  },
+  {
+    "number": "312",
+    "baseWord": "press",
+    "baseMeaning": "按；压",
+    "transformations": []
+  },
+  {
+    "number": "314",
+    "baseWord": "print",
+    "baseMeaning": "打印；印刷",
+    "transformations": [
+      {
+        "word": "printer",
+        "type": "n.",
+        "meaning": "打印机"
+      },
+      {
+        "word": "printing",
+        "type": "n.",
+        "meaning": "印刷(术)"
+      }
+    ]
+  },
+  {
+    "number": "315",
+    "baseWord": "prison",
+    "baseMeaning": "犯人",
+    "transformations": []
+  },
+  {
+    "number": "316",
+    "baseWord": "probable",
+    "baseMeaning": "可能的",
+    "transformations": []
+  },
+  {
+    "number": "317",
+    "baseWord": "produce",
+    "baseMeaning": "生产",
+    "transformations": [
+      {
+        "word": "product",
+        "type": "n.",
+        "meaning": "产品"
+      },
+      {
+        "word": "producer",
+        "type": "n.",
+        "meaning": "生产者"
+      }
+    ]
+  },
+  {
+    "number": "318",
+    "baseWord": "pronounce",
+    "baseMeaning": "发音",
+    "transformations": []
+  },
+  {
+    "number": "319",
+    "baseWord": "proper",
+    "baseMeaning": "适当的",
+    "transformations": [
+      {
+        "word": "properly",
+        "type": "adv.",
+        "meaning": "适当地；得体地"
+      }
+    ]
+  },
+  {
+    "number": "320",
+    "baseWord": "protect",
+    "baseMeaning": "保护",
+    "transformations": [
+      {
+        "word": "protective",
+        "type": "adj.",
+        "meaning": "防护性的"
+      },
+      {
+        "word": "protection",
+        "type": "n.",
+        "meaning": "保护"
+      }
+    ]
+  },
+  {
+    "number": "321",
+    "baseWord": "prove",
+    "baseMeaning": "证明",
+    "transformations": [
+      {
+        "word": "proof",
+        "type": "n.",
+        "meaning": "证据+s"
+      }
+    ]
+  },
+  {
+    "number": "322",
+    "baseWord": "quick",
+    "baseMeaning": "快速的",
+    "transformations": [
+      {
+        "word": "quickly",
+        "type": "adv.",
+        "meaning": ""
+      }
+    ]
+  },
+  {
+    "number": "323",
+    "baseWord": "quiet",
+    "baseMeaning": "安静地",
+    "transformations": [
+      {
+        "word": "quietness",
+        "type": "n.",
+        "meaning": ""
+      }
+    ]
+  },
+  {
+    "number": "328",
+    "baseWord": "real",
+    "baseMeaning": "真实的;真正的",
+    "transformations": [
+      {
+        "word": "really",
+        "type": "adv.",
+        "meaning": "真正地,确实地"
+      },
+      {
+        "word": "realize",
+        "type": "v.",
+        "meaning": "意识到;实现"
+      }
+    ]
+  },
+  {
+    "number": "329",
+    "baseWord": "reason",
+    "baseMeaning": "理由，原因",
+    "transformations": []
+  },
+  {
+    "number": "331",
+    "baseWord": "recognize",
+    "baseMeaning": "认出；承认",
+    "transformations": []
+  },
+  {
+    "number": "332",
+    "baseWord": "record",
+    "baseMeaning": "记录；录音",
+    "transformations": [
+      {
+        "word": "recorder",
+        "type": "n.",
+        "meaning": "录音机"
+      }
+    ]
+  },
+  {
+    "number": "333",
+    "baseWord": "refer",
+    "baseMeaning": "提及；参考",
+    "transformations": []
+  },
+  {
+    "number": "334",
+    "baseWord": "regular",
+    "baseMeaning": "定期的；规律的",
+    "transformations": [
+      {
+        "word": "irregular",
+        "type": "adj.",
+        "meaning": "不规则的；不规律的"
+      },
+      {
+        "word": "regularly",
+        "type": "adv.",
+        "meaning": "经常地"
+      }
+    ]
+  },
+  {
+    "number": "335",
+    "baseWord": "relative",
+    "baseMeaning": "亲戚(adj）相关的",
+    "transformations": []
+  },
+  {
+    "number": "336",
+    "baseWord": "relax",
+    "baseMeaning": "使放松",
+    "transformations": [
+      {
+        "word": "relaxing",
+        "type": "adj.",
+        "meaning": "令人放松的"
+      },
+      {
+        "word": "relaxed",
+        "type": "adj.",
+        "meaning": "感到放松的"
+      },
+      {
+        "word": "relaxation",
+        "type": "n.",
+        "meaning": "休息"
+      }
+    ]
+  },
+  {
+    "number": "338",
+    "baseWord": "report",
+    "baseMeaning": "记者",
+    "transformations": []
+  },
+  {
+    "number": "339",
+    "baseWord": "require",
+    "baseMeaning": "要求；需求",
+    "transformations": [
+      {
+        "word": "requirement",
+        "type": "n.",
+        "meaning": "要求；必要条件"
+      }
+    ]
+  },
+  {
+    "number": "343",
+    "baseWord": "retire",
+    "baseMeaning": "退休",
+    "transformations": [
+      {
+        "word": "retired",
+        "type": "adj.",
+        "meaning": "退休的"
+      },
+      {
+        "word": "retirement",
+        "type": "n.",
+        "meaning": "退休"
+      }
+    ]
+  },
+  {
+    "number": "344",
+    "baseWord": "review",
+    "baseMeaning": "复习；评论=go over",
+    "transformations": []
+  },
+  {
+    "number": "345",
+    "baseWord": "rude",
+    "baseMeaning": "粗鲁地",
+    "transformations": [
+      {
+        "word": "rudeness",
+        "type": "n.",
+        "meaning": "粗鲁"
+      }
+    ]
+  },
+  {
+    "number": "346",
+    "baseWord": "rob",
+    "baseMeaning": "劫匪",
+    "transformations": [
+      {
+        "word": "robbery",
+        "type": "n.",
+        "meaning": "抢劫"
+      }
+    ]
+  },
+  {
+    "number": "352",
+    "baseWord": "say",
+    "baseMeaning": "谚语",
+    "transformations": []
+  },
+  {
+    "number": "353",
+    "baseWord": "science",
+    "baseMeaning": "科学家",
+    "transformations": []
+  },
+  {
+    "number": "356",
+    "baseWord": "select",
+    "baseMeaning": "选择；挑选，选拔",
+    "transformations": [
+      {
+        "word": "selection",
+        "type": "n.",
+        "meaning": "选择"
+      }
+    ]
+  },
+  {
+    "number": "361",
+    "baseWord": "shame",
+    "baseMeaning": "羞耻,羞愧；遗憾的事(v.)使羞愧",
+    "transformations": [
+      {
+        "word": "shameful",
+        "type": "adj.",
+        "meaning": "羞耻的"
+      },
+      {
+        "word": "shameless",
+        "type": "adj.",
+        "meaning": "无耻的"
+      }
+    ]
+  },
+  {
+    "number": "362",
+    "baseWord": "shape",
+    "baseMeaning": "形状；外形，样子(v.）形成，塑造",
+    "transformations": []
+  },
+  {
+    "number": "364",
+    "baseWord": "sharp",
+    "baseMeaning": "敏锐的；锋利的",
+    "transformations": [
+      {
+        "word": "sharpen",
+        "type": "v.",
+        "meaning": "尖锐；使锋利"
+      },
+      {
+        "word": "sharply",
+        "type": "adv.",
+        "meaning": "急剧地；锐利地"
+      }
+    ]
+  },
+  {
+    "number": "365",
+    "baseWord": "short",
+    "baseMeaning": "短的；矮的；短缺的",
+    "transformations": []
+  },
+  {
+    "number": "370",
+    "baseWord": "silent",
+    "baseMeaning": "沉默的",
+    "transformations": [
+      {
+        "word": "silently",
+        "type": "adv.",
+        "meaning": "沉默地"
+      }
+    ]
+  },
+  {
+    "number": "372",
+    "baseWord": "simple",
+    "baseMeaning": "简单的；朴素的",
+    "transformations": [
+      {
+        "word": "simply",
+        "type": "adv.",
+        "meaning": "简单地；仅仅"
+      }
+    ]
+  },
+  {
+    "number": "373",
+    "baseWord": "skill",
+    "baseMeaning": "技能",
+    "transformations": [
+      {
+        "word": "skillful",
+        "type": "adj.",
+        "meaning": "熟练的"
+      }
+    ]
+  },
+  {
+    "number": "375",
+    "baseWord": "sleep",
+    "baseMeaning": "睡觉(n.）睡眠",
+    "transformations": [
+      {
+        "word": "asleep",
+        "type": "adj.",
+        "meaning": "睡着的"
+      },
+      {
+        "word": "sleepy",
+        "type": "adj.",
+        "meaning": "疲倦的"
+      }
+    ]
+  },
+  {
+    "number": "379",
+    "baseWord": "social",
+    "baseMeaning": "社会上的；社交的－society(n.）社会social study社会研究；社会学系",
+    "transformations": []
+  },
+  {
+    "number": "381",
+    "baseWord": "solve",
+    "baseMeaning": "解决；解答",
+    "transformations": [
+      {
+        "word": "solution",
+        "type": "n.",
+        "meaning": "解决办法"
+      }
+    ]
+  },
+  {
+    "number": "384",
+    "baseWord": "stick",
+    "baseMeaning": "黏住；钉住；坚持（n.）木棒；枝条",
+    "transformations": []
+  },
+  {
+    "number": "385",
+    "baseWord": "storm",
+    "baseMeaning": "风暴；暴(风)雨(雪)",
+    "transformations": [
+      {
+        "word": "stormy",
+        "type": "adj.",
+        "meaning": ""
+      }
+    ]
+  },
+  {
+    "number": "389",
+    "baseWord": "succeed",
+    "baseMeaning": "成功",
+    "transformations": [
+      {
+        "word": "success",
+        "type": "n.",
+        "meaning": "成功"
+      },
+      {
+        "word": "successfully",
+        "type": "adv.",
+        "meaning": ""
+      }
+    ]
+  },
+  {
+    "number": "390",
+    "baseWord": "sudden",
+    "baseMeaning": "突然的",
+    "transformations": []
+  },
+  {
+    "number": "395",
+    "baseWord": "survive",
+    "baseMeaning": "幸存的",
+    "transformations": [
+      {
+        "word": "survivor",
+        "type": "n.",
+        "meaning": "幸存者"
+      }
+    ]
+  },
+  {
+    "number": "400",
+    "baseWord": "terrible",
+    "baseMeaning": "可怕的；糟糕的=awful",
+    "transformations": [
+      {
+        "word": "terribly",
+        "type": "adv.",
+        "meaning": "可怕地；非常，很"
+      }
+    ]
+  },
+  {
+    "number": "402",
+    "baseWord": "thick",
+    "baseMeaning": "厚的；浓的；茂密的",
+    "transformations": [
+      {
+        "word": "thickly",
+        "type": "adv.",
+        "meaning": ""
+      },
+      {
+        "word": "thickness",
+        "type": "n.",
+        "meaning": "厚度"
+      },
+      {
+        "word": "thicken",
+        "type": "v.",
+        "meaning": "变厚"
+      }
+    ]
+  },
+  {
+    "number": "404",
+    "baseWord": "thirst",
+    "baseMeaning": "口渴的",
+    "transformations": []
+  },
+  {
+    "number": "405",
+    "baseWord": "tidy",
+    "baseMeaning": "整理",
+    "transformations": []
+  },
+  {
+    "number": "406",
+    "baseWord": "tire",
+    "baseMeaning": "使疲惫",
+    "transformations": [
+      {
+        "word": "tired",
+        "type": "adj.",
+        "meaning": "疲劳的；累的=exhausted"
+      },
+      {
+        "word": "tiring",
+        "type": "adj.",
+        "meaning": ""
+      }
+    ]
+  },
+  {
+    "number": "408",
+    "baseWord": "touch",
+    "baseMeaning": "令人感动的",
+    "transformations": [
+      {
+        "word": "touched",
+        "type": "adj.",
+        "meaning": "感动的=moved"
+      }
+    ]
+  },
+  {
+    "number": "409",
+    "baseWord": "tour",
+    "baseMeaning": "旅游；观光",
+    "transformations": [
+      {
+        "word": "tourist",
+        "type": "n.",
+        "meaning": "游客"
+      }
+    ]
+  },
+  {
+    "number": "412",
+    "baseWord": "translate",
+    "baseMeaning": "翻译",
+    "transformations": [
+      {
+        "word": "translator",
+        "type": "n.",
+        "meaning": "翻译家"
+      }
+    ]
+  },
+  {
+    "number": "413",
+    "baseWord": "transport",
+    "baseMeaning": "运输；输送",
+    "transformations": [
+      {
+        "word": "transportation",
+        "type": "n.",
+        "meaning": "运输；交通"
+      }
+    ]
+  },
+  {
+    "number": "414",
+    "baseWord": "travel",
+    "baseMeaning": "游客",
+    "transformations": []
+  },
+  {
+    "number": "416",
+    "baseWord": "true",
+    "baseMeaning": "真的；真实的",
+    "transformations": [
+      {
+        "word": "truth",
+        "type": "n.",
+        "meaning": "真相"
+      },
+      {
+        "word": "truly",
+        "type": "adv.",
+        "meaning": ""
+      }
+    ]
+  },
+  {
+    "number": "419",
+    "baseWord": "unfair",
+    "baseMeaning": "公平的；白皙的（n.）市集",
+    "transformations": []
+  },
+  {
+    "number": "421",
+    "baseWord": "fortunate",
+    "baseMeaning": "幸运的",
+    "transformations": [
+      {
+        "word": "fortunately",
+        "type": "adv.",
+        "meaning": "不幸地；遗憾地"
+      },
+      {
+        "word": "unfortunate",
+        "type": "adj",
+        "meaning": "不幸的"
+      }
+    ]
+  },
+  {
+    "number": "422",
+    "baseWord": "unity",
+    "baseMeaning": "团结；联合",
+    "transformations": []
+  },
+  {
+    "number": "423",
+    "baseWord": "usual",
+    "baseMeaning": "通常的",
+    "transformations": [
+      {
+        "word": "unusual",
+        "type": "adj.",
+        "meaning": "不寻常的"
+      },
+      {
+        "word": "usually",
+        "type": "adv.",
+        "meaning": "通常；经常"
+      }
+    ]
+  },
+  {
+    "number": "424",
+    "baseWord": "use",
+    "baseMeaning": "使用；利用",
+    "transformations": [
+      {
+        "word": "useful",
+        "type": "adj",
+        "meaning": "有用的"
+      },
+      {
+        "word": "useless",
+        "type": "adj.",
+        "meaning": "无用的"
+      }
+    ]
+  },
+  {
+    "number": "425",
+    "baseWord": "value",
+    "baseMeaning": "给·…·估价；重视；珍视",
+    "transformations": []
+  },
+  {
+    "number": "426",
+    "baseWord": "various",
+    "baseMeaning": "各种各样的",
+    "transformations": [
+      {
+        "word": "variously",
+        "type": "adv.",
+        "meaning": ""
+      },
+      {
+        "word": "vary",
+        "type": "v.",
+        "meaning": "使变化(不同）"
+      },
+      {
+        "word": "variety",
+        "type": "n.",
+        "meaning": "种类"
+      }
+    ]
+  },
+  {
+    "number": "427",
+    "baseWord": "victory",
+    "baseMeaning": "胜利者",
+    "transformations": []
+  },
+  {
+    "number": "428",
+    "baseWord": "view",
+    "baseMeaning": "看法；风景，景色；视野",
+    "transformations": []
+  },
+  {
+    "number": "429",
+    "baseWord": "village",
+    "baseMeaning": "村庄，乡村",
+    "transformations": []
+  },
+  {
+    "number": "431",
+    "baseWord": "visit",
+    "baseMeaning": "访客；游客",
+    "transformations": []
+  },
+  {
+    "number": "432",
+    "baseWord": "wait",
+    "baseMeaning": "服务员",
+    "transformations": [
+      {
+        "word": "waitress",
+        "type": "n.",
+        "meaning": "女服务员"
+      }
+    ]
+  },
+  {
+    "number": "434",
+    "baseWord": "warn",
+    "baseMeaning": "警告；告诫",
+    "transformations": [
+      {
+        "word": "warning",
+        "type": "n.",
+        "meaning": "警告"
+      }
+    ]
+  },
+  {
+    "number": "436",
+    "baseWord": "weak",
+    "baseMeaning": "虚弱的",
+    "transformations": [
+      {
+        "word": "weakly",
+        "type": "adv.",
+        "meaning": ""
+      },
+      {
+        "word": "weakness",
+        "type": "n.",
+        "meaning": "虚弱；弱点"
+      },
+      {
+        "word": "weaken",
+        "type": "v.",
+        "meaning": "(使)虚弱"
+      }
+    ]
+  },
+  {
+    "number": "438",
+    "baseWord": "weigh",
+    "baseMeaning": "重；称·…的重重",
+    "transformations": [
+      {
+        "word": "weight",
+        "type": "n.",
+        "meaning": "重量"
+      }
+    ]
+  },
+  {
+    "number": "440",
+    "baseWord": "wide",
+    "baseMeaning": "加宽",
+    "transformations": [
+      {
+        "word": "widely",
+        "type": "adv.",
+        "meaning": "广泛地"
+      },
+      {
+        "word": "width",
+        "type": "n.",
+        "meaning": "宽度"
+      }
+    ]
+  },
+  {
+    "number": "442",
+    "baseWord": "wind",
+    "baseMeaning": "风",
+    "transformations": [
+      {
+        "word": "windy",
+        "type": "adj.",
+        "meaning": "多风的"
+      }
+    ]
+  },
+  {
+    "number": "443",
+    "baseWord": "wise",
+    "baseMeaning": "明智的",
+    "transformations": [
+      {
+        "word": "wisdom",
+        "type": "n.",
+        "meaning": "智慧"
+      }
+    ]
+  },
+  {
+    "number": "445",
+    "baseWord": "wonder",
+    "baseMeaning": "想知道；奇迹",
+    "transformations": []
+  },
+  {
+    "number": "446",
+    "baseWord": "wood",
+    "baseMeaning": "木头",
+    "transformations": []
+  },
+  {
+    "number": "447",
+    "baseWord": "work",
+    "baseMeaning": "工作；运转；作品(可数)",
+    "transformations": [
+      {
+        "word": "worker",
+        "type": "n.",
+        "meaning": "工作者；工人"
+      }
+    ]
+  },
+  {
+    "number": "449",
+    "baseWord": "wound",
+    "baseMeaning": "受伤的",
+    "transformations": []
+  }
+]
