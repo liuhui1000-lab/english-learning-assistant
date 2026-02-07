@@ -115,7 +115,9 @@ export default function AIProvidersPage() {
   const handleInit = async () => {
     try {
       setInitializing(true);
-      const response = await fetch('/api/admin/init-ai-providers-table', {
+
+      // 先尝试简化版（不使用触发器）
+      const response = await fetch('/api/admin/init-ai-providers-simple', {
         method: 'POST',
       });
 

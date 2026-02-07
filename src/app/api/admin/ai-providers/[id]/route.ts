@@ -60,6 +60,9 @@ export async function PUT(
       );
     }
 
+    // 手动添加 updated_at 更新（因为简化版没有触发器）
+    updates.push(`updated_at = NOW()`);
+
     values.push(id);
 
     // 更新配置
