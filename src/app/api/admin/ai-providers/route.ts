@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 验证 provider_name 是否合法
-    const validProviders = ['gemini', 'deepseek', 'kimi', 'openai', 'minimax', 'claude'];
+    const validProviders = ['gemini', 'deepseek', 'kimi', 'openai', 'minimax', 'claude', 'zhipu'];
     if (!validProviders.includes(provider_name)) {
       return NextResponse.json(
         { error: { code: 'INVALID_PROVIDER', message: `无效的 provider_name，支持：${validProviders.join(', ')}` } },
