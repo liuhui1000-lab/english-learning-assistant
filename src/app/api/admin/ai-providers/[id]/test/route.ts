@@ -5,7 +5,7 @@ import { query } from '@/utils/db';
 // 测试AI配置
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // 验证管理员权限
@@ -17,7 +17,8 @@ export async function POST(
       );
     }
 
-    const providerId = parseInt(params.id);
+    const { id } = await params;
+    const providerId = parseInt(id);
     if (isNaN(providerId)) {
       return NextResponse.json(
         { error: { code: 'INVALID_ID', message: '无效的配置ID' } },
