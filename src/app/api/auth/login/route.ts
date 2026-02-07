@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 查询用户
+    // 查询用户（用户名不区分大小写）
     const result = await query(
       `SELECT
         id,
@@ -36,8 +36,8 @@ export async function POST(request: NextRequest) {
         role,
         is_active
       FROM users
-      WHERE username = $1 OR email = $1`,
-      [username]
+      WHERE LOWER(username) = LOWER($1) OR email = $2`,
+      [username, username]
     );
 
     if (result.rows.length === 0) {
