@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/utils/db';
 import { getCurrentUserFromRequest } from '@/utils/authHelper';
-import crypto from 'crypto';
+import { verifyPassword, hashPassword } from '@/utils/auth';
 
 export async function POST(request: NextRequest) {
   try {
@@ -68,31 +68,21 @@ export async function POST(request: NextRequest) {
     const existingUser = result.rows[0];
     console.log('现有用户数据:', { id: existingUser.id, username: existingUser.username });
 
-    // 验证旧密码
-    const inputHash = crypto
-      .createHash('sha256')
-      .update(oldPassword)
-      .digest('hex');
+    // 验证旧密码（使用 bcrypt，与登录 API 一致）
+    const isPasswordValid = await verifyPassword(oldPassword, existingUser.password_hash);
 
-    console.log('旧密码哈希比对:', {
-      input: inputHash,
-      stored: existingUser.password_hash,
-      match: inputHash === existingUser.password_hash
-    });
+    console.log('旧密码验证结果:', isPasswordValid);
 
-    if (inputHash !== existingUser.password_hash) {
-      console.error('旧密码不匹配');
+    if (!isPasswordValid) {
+      console.error('旧密码不正确');
       return NextResponse.json(
         { success: false, error: '当前密码不正确' },
         { status: 401 }
       );
     }
 
-    // 生成新密码的哈希
-    const newPasswordHash = crypto
-      .createHash('sha256')
-      .update(newPassword)
-      .digest('hex');
+    // 生成新密码的哈希（使用 bcrypt，与登录 API 一致）
+    const newPasswordHash = await hashPassword(newPassword);
 
     console.log('准备更新密码');
 
