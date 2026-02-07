@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       );
     }
-    console.log('[Init] 权限验证成功:', admin.username);
+    console.log('[Init] 权限验证成功，用户ID:', admin.userId);
 
     // 创建ai_providers表
     console.log('[Init] 创建ai_providers表...');
