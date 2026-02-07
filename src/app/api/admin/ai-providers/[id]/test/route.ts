@@ -245,53 +245,108 @@ export async function POST(
 
       // API调用成功
       console.log('[Test] API调用成功，开始解析响应内容');
+      console.log('[Test] 响应数据键:', Object.keys(responseData));
 
       // 尝试提取响应内容
       let content = '';
       let parseMethod = '';
 
-      // OpenAI兼容格式（OpenAI、DeepSeek、Kimi、Zhipu）
-      if (responseData.choices?.[0]?.message?.content) {
-        content = responseData.choices[0].message.content;
-        parseMethod = 'openai_format';
-        console.log('[Test] 使用OpenAI格式解析:', content);
+      // 1. OpenAI兼容格式（最常见）- 智谱清言应该使用这个格式
+      if (responseData.choices && Array.isArray(responseData.choices) && responseData.choices.length > 0) {
+        const choice = responseData.choices[0];
+        if (choice.message?.content) {
+          content = choice.message.content;
+          parseMethod = 'openai_format';
+          console.log('[Test] 使用choices[0].message.content格式解析');
+        } else if (choice.message) {
+          content = JSON.stringify(choice.message);
+          parseMethod = 'openai_format_raw';
+          console.log('[Test] 使用choices[0].message格式解析（原始）');
+        }
       }
-      // Gemini格式
-      else if (responseData.candidates?.[0]?.content?.parts?.[0]?.text) {
-        content = responseData.candidates[0].content.parts[0].text;
-        parseMethod = 'gemini_format';
-        console.log('[Test] 使用Gemini格式解析:', content);
+      // 2. Gemini格式
+      else if (responseData.candidates && Array.isArray(responseData.candidates) && responseData.candidates.length > 0) {
+        const candidate = responseData.candidates[0];
+        if (candidate.content?.parts && candidate.content.parts.length > 0) {
+          content = candidate.content.parts[0].text;
+          parseMethod = 'gemini_format';
+          console.log('[Test] 使用candidates[0].content.parts[0].text格式解析');
+        }
       }
-      // MiniMax格式
-      else if (responseData.content?.[0]?.text) {
+      // 3. MiniMax格式
+      else if (responseData.content && Array.isArray(responseData.content) && responseData.content.length > 0) {
         content = responseData.content[0].text;
         parseMethod = 'minimax_format';
-        console.log('[Test] 使用MiniMax格式解析:', content);
+        console.log('[Test] 使用content[0].text格式解析');
       }
-      // 尝试其他可能的格式
+      // 4. 尝试其他可能的格式
       else if (responseData.reply?.content) {
         content = responseData.reply.content;
         parseMethod = 'reply_content';
-        console.log('[Test] 使用reply.content格式解析:', content);
+        console.log('[Test] 使用reply.content格式解析');
       }
       else if (responseData.data?.content) {
         content = responseData.data.content;
         parseMethod = 'data_content';
-        console.log('[Test] 使用data.content格式解析:', content);
+        console.log('[Test] 使用data.content格式解析');
       }
       else if (responseData.output?.text) {
         content = responseData.output.text;
         parseMethod = 'output_text';
-        console.log('[Test] 使用output.text格式解析:', content);
+        console.log('[Test] 使用output.text格式解析');
+      }
+      else if (responseData.result?.content) {
+        content = responseData.result.content;
+        parseMethod = 'result_content';
+        console.log('[Test] 使用result.content格式解析');
+      }
+      else if (responseData.text) {
+        content = responseData.text;
+        parseMethod = 'direct_text';
+        console.log('[Test] 使用text格式解析');
       }
       else if (typeof responseData === 'string') {
         content = responseData;
         parseMethod = 'direct_string';
         console.log('[Test] 直接返回字符串:', content);
       }
+      // 5. 尝试深度搜索content字段
+      else {
+        console.log('[Test] 尝试深度搜索content字段...');
+        const searchObject = (obj: any, path = ''): string => {
+          if (!obj) return '';
 
-      if (!content && parseMethod) {
-        console.log('[Test] 无法从', parseMethod, '中提取内容');
+          if (typeof obj === 'string' && obj.length > 0 && obj.length < 10000) {
+            console.log('[Test] 找到字符串字段:', path);
+            return obj;
+          }
+
+          for (const [key, value] of Object.entries(obj)) {
+            const currentPath = path ? `${path}.${key}` : key;
+            if (typeof value === 'object') {
+              const result = searchObject(value, currentPath);
+              if (result) return result;
+            } else if (typeof value === 'string' && value.length > 0 && value.length < 10000) {
+              // 排除明显不是AI回复的字段
+              if (!['error', 'message', 'code', 'status', 'id', 'created_at'].includes(key.toLowerCase())) {
+                console.log('[Test] 找到可能的content字段:', currentPath, value.substring(0, 100));
+                return value;
+              }
+            }
+          }
+          return '';
+        };
+
+        content = searchObject(responseData, '');
+        if (content) {
+          parseMethod = 'deep_search';
+          console.log('[Test] 深度搜索找到内容，长度:', content.length);
+          content = content.substring(0, 200) + (content.length > 200 ? '...' : '');
+        }
+      }
+
+      if (!content) {
+        console.log('[Test] 无法提取响应内容，响应键:', Object.keys(responseData));
       }
 
       return NextResponse.json({
