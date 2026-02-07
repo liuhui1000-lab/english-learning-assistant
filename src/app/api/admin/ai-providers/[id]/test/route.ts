@@ -255,13 +255,40 @@ export async function POST(
       if (responseData.choices && Array.isArray(responseData.choices) && responseData.choices.length > 0) {
         const choice = responseData.choices[0];
         if (choice.message?.content) {
+          // 普通OpenAI格式
           content = choice.message.content;
           parseMethod = 'openai_format';
-          console.log('[Test] 使用choices[0].message.content格式解析');
-        } else if (choice.message) {
-          content = JSON.stringify(choice.message);
-          parseMethod = 'openai_format_raw';
-          console.log('[Test] 使用choices[0].message格式解析（原始）');
+          console.log('[Test] 使用choices[0].message.content格式解析:', content);
+        } else if (choice.message && typeof choice.message === 'string' && choice.message.startsWith('{')) {
+          // 智谱清言等特殊格式：message本身是JSON字符串
+          try {
+            const messageObj = JSON.parse(choice.message);
+            console.log('[Test] 解析message JSON:', Object.keys(messageObj));
+
+            // 智谱清言使用reasoning_content作为主要回复
+            if (messageObj.reasoning_content) {
+              content = messageObj.reasoning_content;
+              parseMethod = 'zhipu_reasoning_content';
+              console.log('[Test] 使用智谱清言reasoning_content格式解析:', content);
+            } else if (messageObj.content) {
+              content = messageObj.content;
+              parseMethod = 'zhipu_content';
+              console.log('[Test] 使用智谱清言content格式解析:', content);
+            } else if (messageObj.text) {
+              content = messageObj.text;
+              parseMethod = 'zhipu_text';
+              console.log('[Test] 使用智谱清言text格式解析:', content);
+            } else if (messageObj.output) {
+              content = messageObj.output;
+              parseMethod = 'zhipu_output';
+              console.log('[Test] 使用智谱清言output格式解析:', content);
+            }
+          } catch (e) {
+            // 解析失败，使用原始字符串（截取部分）
+            content = choice.message.substring(0, 200) + '...';
+            parseMethod = 'zhipu_parse_failed';
+            console.log('[Test] 解析智谱清言message JSON失败:', e);
+          }
         }
       }
       // 2. Gemini格式
