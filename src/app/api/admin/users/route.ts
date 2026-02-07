@@ -93,7 +93,16 @@ export async function GET(request: NextRequest) {
       FROM users
       ${whereClause}
     `;
-    const countResult = await query(countQuery, params.slice(0, paramIndex - 2));
+
+    // 计算count查询需要的参数数量（where条件数量）
+    const whereParamCount = whereConditions.length;
+
+    console.log('WHERE条件数量:', whereParamCount);
+
+    const countResult = await query(
+      countQuery,
+      params.slice(0, whereParamCount)
+    );
     const total = parseInt(countResult.rows[0].total);
 
     console.log('用户总数:', total);
@@ -145,8 +154,15 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('获取用户列表失败:', error);
+    console.error('错误堆栈:', error instanceof Error ? error.stack : '无堆栈信息');
+    console.error('错误类型:', error instanceof Error ? error.constructor.name : typeof error);
+
     return NextResponse.json(
-      { error: '获取用户列表失败' },
+      {
+        error: '获取用户列表失败',
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      },
       { status: 500 }
     );
   }

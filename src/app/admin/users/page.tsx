@@ -88,7 +88,8 @@ export default function AdminUsersPage() {
         console.log('加载了', data.data.length, '个用户');
       } else {
         console.error('加载用户列表失败:', data.error);
-        alert(`加载失败：${data.error}`);
+        console.error('详细错误:', data.message);
+        alert(`加载失败：${data.error}\n\n详细信息：${data.message || '无'}`);
       }
     } catch (error) {
       console.error('加载用户列表失败:', error);
