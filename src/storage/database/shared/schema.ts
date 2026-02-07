@@ -5,35 +5,6 @@ import { z } from "zod"
 
 
 
-
-export const users = pgTable("users", {
-    id: varchar({ length: 36 }).default(sql`gen_random_uuid()`).primaryKey().notNull(),
-    username: varchar({ length: 100 }).notNull(),
-    email: varchar({ length: 255 }).notNull(),
-    passwordHash: varchar("password_hash", { length: 255 }).notNull(),
-    fullName: varchar("full_name", { length: 100 }),
-    role: varchar({ length: 20 }).default('user').notNull(),
-    isActive: boolean("is_active").default(true).notNull(),
-    lastLoginAt: timestamp("last_login_at", { withTimezone: true, mode: 'string' }),
-    createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-    updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-    lastAnalysisDate: timestamp("last_analysis_date", { withTimezone: true, mode: 'string' }),
-    hasNewMistakes: boolean("has_new_mistakes").default(false),
-    lastMistakeUpdated: timestamp("last_mistake_updated", { withTimezone: true, mode: 'string' }),
-}, (table) => [
-    index("users_username_idx").using("btree", table.username.asc().nullsLast().op("text_ops")),
-    unique("users_username_unique").on(table.username),
-    unique("users_email_unique").on(table.email),
-    index("users_role_idx").using("btree", table.role.asc().nullsLast().op("text_ops")),
-    index("users_is_active_idx").using("btree", table.isActive.asc().nullsLast().op("boolean_ops")),
-]);
-
-// Zod schemas for validation
-export const insertUserSchema = createInsertSchema(users)
-export const selectUserSchema = createSelectSchema(users)
-export type InsertUser = z.infer<typeof insertUserSchema>
-export type User = typeof users.$inferSelect
-
 export const collocations = pgTable("collocations", {
 	id: varchar({ length: 36 }).default(sql`gen_random_uuid()`).primaryKey().notNull(),
 	phrase: varchar({ length: 100 }).notNull(),
@@ -270,6 +241,39 @@ export const grammarWeakPoints = pgTable("grammar_weak_points", {
 		}).onDelete("cascade"),
 ]);
 
+
+export const userLoginLogs = pgTable("user_login_logs", {
+    id: varchar({ length: 36 }).default(sql`gen_random_uuid()`).primaryKey().notNull(),
+    userId: varchar("user_id", { length: 100 }).notNull(),
+    loginTime: timestamp("login_time", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    logoutTime: timestamp("logout_time", { withTimezone: true, mode: 'string' }),
+    ipAddress: varchar("ip_address", { length: 45 }),
+    userAgent: text("user_agent"),
+    status: varchar({ length: 20 }).default('success').notNull(),
+    errorMessage: text("error_message"),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+    index("user_login_logs_user_id_idx").using("btree", table.userId.asc().nullsLast().op("text_ops")),
+    index("user_login_logs_login_time_idx").using("btree", table.loginTime.desc().nullsLast().op("timestamptz_ops")),
+]);
+
+export const userMistakeStats = pgTable("user_mistake_stats", {
+    id: varchar({ length: 36 }).default(sql`gen_random_uuid()`).primaryKey().notNull(),
+    userId: varchar("user_id", { length: 100 }).notNull(),
+    totalMistakes: integer("total_mistakes").default(0).notNull(),
+    grammarMistakes: integer("grammar_mistakes").default(0).notNull(),
+    vocabularyMistakes: integer("vocabulary_mistakes").default(0).notNull(),
+    readingMistakes: integer("reading_mistakes").default(0).notNull(),
+    transformationMistakes: integer("transformation_mistakes").default(0).notNull(),
+    masteredCount: integer("mastered_count").default(0).notNull(),
+    lastAnalysisDate: timestamp("last_analysis_date", { withTimezone: true, mode: 'string' }),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+    index("user_mistake_stats_user_id_idx").using("btree", table.userId.asc().nullsLast().op("text_ops")),
+    index("user_mistake_stats_last_analysis_date_idx").using("btree", table.lastAnalysisDate.desc().nullsLast().op("timestamptz_ops")),
+]);
+
 // Zod Schemas for validation
 
 export const insertWordSchema = createInsertSchema(words)
@@ -313,3 +317,14 @@ export type InsertGrammarPoint = z.infer<typeof insertGrammarPointSchema>
 
 // 使用 Drizzle 的类型推断，保持一致性
 export type GrammarPoint = typeof grammarPoints.$inferSelect
+
+// User-related tables schemas and types
+export const insertUserLoginLogSchema = createInsertSchema(userLoginLogs)
+export const selectUserLoginLogSchema = createSelectSchema(userLoginLogs)
+export type InsertUserLoginLog = z.infer<typeof insertUserLoginLogSchema>
+export type UserLoginLog = typeof userLoginLogs.$inferSelect
+
+export const insertUserMistakeStatsSchema = createInsertSchema(userMistakeStats)
+export const selectUserMistakeStatsSchema = createSelectSchema(userMistakeStats)
+export type InsertUserMistakeStats = z.infer<typeof insertUserMistakeStatsSchema>
+export type UserMistakeStats = typeof userMistakeStats.$inferSelect
