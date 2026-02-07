@@ -37,8 +37,29 @@ export async function GET(request: NextRequest) {
     });
   } catch (error: any) {
     console.error('获取AI配置失败:', error);
+
+    // 检查是否是表不存在的错误
+    if (error?.message?.includes('does not exist') || error?.code === '42P01') {
+      return NextResponse.json(
+        {
+          error: {
+            code: 'TABLE_NOT_FOUND',
+            message: '数据库表不存在，请先初始化数据库表'
+          },
+          tableNotExists: true  // 添加标志，方便前端识别
+        },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json(
-      { error: { code: 'SERVER_ERROR', message: '获取AI配置失败' } },
+      {
+        error: {
+          code: 'SERVER_ERROR',
+          message: error?.message || '获取AI配置失败',
+          details: process.env.NODE_ENV === 'development' ? error?.stack : undefined
+        }
+      },
       { status: 500 }
     );
   }
@@ -98,8 +119,31 @@ export async function POST(request: NextRequest) {
     });
   } catch (error: any) {
     console.error('创建AI配置失败:', error);
+
+    // 检查是否是表不存在的错误
+    if (error?.message?.includes('does not exist') || error?.code === '42P01') {
+      return NextResponse.json(
+        { error: { code: 'TABLE_NOT_FOUND', message: '数据库表不存在，请先初始化数据库表' } },
+        { status: 500 }
+      );
+    }
+
+    // 检查是否是唯一约束冲突
+    if (error?.code === '23505') {
+      return NextResponse.json(
+        { error: { code: 'DUPLICATE_PROVIDER', message: '该AI服务商已存在激活配置，请先停用现有配置' } },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json(
-      { error: { code: 'SERVER_ERROR', message: '创建AI配置失败' } },
+      {
+        error: {
+          code: 'SERVER_ERROR',
+          message: error?.message || '创建AI配置失败',
+          details: process.env.NODE_ENV === 'development' ? error?.stack : undefined
+        }
+      },
       { status: 500 }
     );
   }

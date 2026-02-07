@@ -98,7 +98,7 @@ export default function AIProvidersPage() {
         setNeedsInit(false);
       } else {
         // 检查是否是表不存在错误
-        if (response.status === 500 || data.error?.message?.includes('does not exist')) {
+        if (response.status === 500 && (data.tableNotExists || data.error?.code === 'TABLE_NOT_FOUND')) {
           setNeedsInit(true);
         } else {
           toast.error('加载AI配置失败');
@@ -161,7 +161,13 @@ export default function AIProvidersPage() {
         setFormData({ provider_name: '', model_name: '', api_key: '', priority: 0 });
         loadProviders();
       } else {
-        toast.error(data.error?.message || '创建失败');
+        // 检查是否是表不存在错误
+        if (response.status === 500 && data.error?.code === 'TABLE_NOT_FOUND') {
+          setNeedsInit(true);
+          toast.error('数据库表不存在，请先初始化');
+        } else {
+          toast.error(data.error?.message || '创建失败');
+        }
       }
     } catch (error) {
       console.error('创建AI配置失败:', error);
