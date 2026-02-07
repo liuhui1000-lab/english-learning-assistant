@@ -5,6 +5,35 @@ import { z } from "zod"
 
 
 
+
+export const users = pgTable("users", {
+    id: varchar({ length: 36 }).default(sql`gen_random_uuid()`).primaryKey().notNull(),
+    username: varchar({ length: 100 }).notNull(),
+    email: varchar({ length: 255 }).notNull(),
+    passwordHash: varchar("password_hash", { length: 255 }).notNull(),
+    fullName: varchar("full_name", { length: 100 }),
+    role: varchar({ length: 20 }).default('user').notNull(),
+    isActive: boolean("is_active").default(true).notNull(),
+    lastLoginAt: timestamp("last_login_at", { withTimezone: true, mode: 'string' }),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    lastAnalysisDate: timestamp("last_analysis_date", { withTimezone: true, mode: 'string' }),
+    hasNewMistakes: boolean("has_new_mistakes").default(false),
+    lastMistakeUpdated: timestamp("last_mistake_updated", { withTimezone: true, mode: 'string' }),
+}, (table) => [
+    index("users_username_idx").using("btree", table.username.asc().nullsLast().op("text_ops")),
+    unique("users_username_unique").on(table.username),
+    unique("users_email_unique").on(table.email),
+    index("users_role_idx").using("btree", table.role.asc().nullsLast().op("text_ops")),
+    index("users_is_active_idx").using("btree", table.isActive.asc().nullsLast().op("boolean_ops")),
+]);
+
+// Zod schemas for validation
+export const insertUserSchema = createInsertSchema(users)
+export const selectUserSchema = createSelectSchema(users)
+export type InsertUser = z.infer<typeof insertUserSchema>
+export type User = typeof users.$inferSelect
+
 export const collocations = pgTable("collocations", {
 	id: varchar({ length: 36 }).default(sql`gen_random_uuid()`).primaryKey().notNull(),
 	phrase: varchar({ length: 100 }).notNull(),
