@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { query } from '@/utils/db';
+import crypto from 'crypto';
 
 export async function POST(request: NextRequest) {
   try {
@@ -53,40 +55,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 导入数据库
-    const { db } = await import('@/lib/db');
+    // 查询用户信息
+    const result = await query(
+      `SELECT id, username, password_hash FROM users WHERE id = $1`,
+      [user.userId]
+    );
 
-    // 验证旧密码
-    const { users } = await import('@/storage/database/shared/schema');
-
-    const existingUsers = await db
-      .select()
-      .from(users)
-      .where((user: any) => user.id === user.userId)
-      .limit(1);
-
-    if (!existingUsers || existingUsers.length === 0) {
+    if (!result.rows || result.rows.length === 0) {
       return NextResponse.json(
         { success: false, error: '用户不存在' },
         { status: 404 }
       );
     }
 
-    const existingUser = existingUsers[0];
+    const existingUser = result.rows[0];
 
-    // 使用 Node.js 的 crypto 模块比较密码
-    const crypto = require('crypto');
+    // 验证旧密码
+    const inputHash = crypto
+      .createHash('sha256')
+      .update(oldPassword)
+      .digest('hex');
 
-    const verifyPassword = (input: string, stored: string) => {
-      const inputHash = crypto
-        .createHash('sha256')
-        .update(input)
-        .digest('hex');
-
-      return inputHash === stored;
-    };
-
-    if (!verifyPassword(oldPassword, existingUser.passwordHash)) {
+    if (inputHash !== existingUser.password_hash) {
       return NextResponse.json(
         { success: false, error: '当前密码不正确' },
         { status: 401 }
@@ -94,25 +84,18 @@ export async function POST(request: NextRequest) {
     }
 
     // 生成新密码的哈希
-    const hashPassword = (password: string) => {
-      return crypto
-        .createHash('sha256')
-        .update(password)
-        .digest('hex');
-    };
-
-    const newPasswordHash = hashPassword(newPassword);
+    const newPasswordHash = crypto
+      .createHash('sha256')
+      .update(newPassword)
+      .digest('hex');
 
     // 更新密码
-    const { eq } = await import('drizzle-orm');
-
-    await db
-      .update(users)
-      .set({
-        passwordHash: newPasswordHash,
-        updatedAt: new Date().toISOString(),
-      })
-      .where(eq(users.id, user.userId));
+    await query(
+      `UPDATE users
+       SET password_hash = $1, updated_at = $2
+       WHERE id = $3`,
+      [newPasswordHash, new Date().toISOString(), user.userId]
+    );
 
     return NextResponse.json({
       success: true,
