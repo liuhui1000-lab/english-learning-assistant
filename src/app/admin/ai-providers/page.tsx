@@ -263,20 +263,63 @@ export default function AIProvidersPage() {
       console.log('[UI] 测试API返回:', data);
 
       if (data.success && data.valid) {
+        // 测试成功
+        let successMessage = data.message || 'API连接成功';
+        if (data.testType === 'api') {
+          successMessage += ` (${data.duration}ms)`;
+        }
+
         console.log('[UI] 测试成功，显示成功提示');
-        toast.success(data.message || '配置验证通过', {
+        toast.success(successMessage, {
           icon: <CheckCircle2 className="w-5 h-5 text-green-500" />,
+          description: data.responsePreview ? `响应预览: ${data.responsePreview}` : undefined,
+          duration: 5000,
         });
       } else {
+        // 测试失败
         console.log('[UI] 测试失败:', data);
-        const errorMsg = data.errors?.join(', ') || data.message || '配置验证失败';
-        toast.error(errorMsg, {
+
+        let errorMessage = data.message || '配置验证失败';
+
+        // 根据错误类型显示更详细的错误信息
+        if (data.testType === 'api') {
+          const errorMessages: Record<string, string> = {
+            AUTH_FAILED: 'API密钥无效或已过期',
+            MODEL_NOT_FOUND: '模型名称不存在',
+            RATE_LIMIT: 'API调用频率超限',
+            INVALID_REQUEST: '请求参数错误',
+            NETWORK_ERROR: '网络连接失败',
+            TIMEOUT: '请求超时',
+            CONNECTION_FAILED: '无法连接到服务器',
+          };
+
+          if (data.errorType && errorMessages[data.errorType]) {
+            errorMessage = errorMessages[data.errorType];
+          }
+
+          if (data.statusCode) {
+            errorMessage += ` (HTTP ${data.statusCode})`;
+          }
+
+          if (data.duration) {
+            errorMessage += ` - ${data.duration}ms`;
+          }
+
+          if (data.errorMessage) {
+            errorMessage += `\n详情: ${data.errorMessage}`;
+          }
+        } else if (data.errors) {
+          errorMessage += '\n' + data.errors.join(', ');
+        }
+
+        toast.error(errorMessage, {
           icon: <XCircle className="w-5 h-5 text-red-500" />,
+          duration: 5000,
         });
       }
     } catch (error) {
       console.error('[UI] 测试AI配置失败:', error);
-      toast.error('测试AI配置失败', {
+      toast.error('测试AI配置失败 - 网络或服务器错误', {
         icon: <XCircle className="w-5 h-5 text-red-500" />,
       });
     } finally {
