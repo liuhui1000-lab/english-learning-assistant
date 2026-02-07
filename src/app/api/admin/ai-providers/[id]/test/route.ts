@@ -192,9 +192,26 @@ export async function POST(
       const duration = Date.now() - startTime;
       console.log('[Test] API响应时间:', duration, 'ms');
 
-      const responseData = await response.json();
+      const responseText = await response.text();
+      console.log('[Test] API原始响应（前500字符）:', responseText.substring(0, 500));
+
+      let responseData;
+      try {
+        responseData = JSON.parse(responseText);
+        console.log('[Test] API解析后的响应:', JSON.stringify(responseData).substring(0, 300));
+      } catch (e) {
+        console.log('[Test] 无法解析JSON响应:', e);
+        return NextResponse.json({
+          success: false,
+          valid: false,
+          message: 'API返回的不是有效的JSON',
+          rawResponse: responseText.substring(0, 200),
+          duration,
+          testType: 'api'
+        });
+      }
+
       console.log('[Test] API响应状态:', response.status);
-      console.log('[Test] API响应数据:', JSON.stringify(responseData).substring(0, 200));
 
       // 检查响应状态
       if (!response.ok) {
@@ -227,23 +244,54 @@ export async function POST(
       }
 
       // API调用成功
-      console.log('[Test] API调用成功');
+      console.log('[Test] API调用成功，开始解析响应内容');
 
       // 尝试提取响应内容
       let content = '';
-      try {
-        if (responseData.choices?.[0]?.message?.content) {
-          // OpenAI格式
-          content = responseData.choices[0].message.content;
-        } else if (responseData.candidates?.[0]?.content?.parts?.[0]?.text) {
-          // Gemini格式
-          content = responseData.candidates[0].content.parts[0].text;
-        } else if (responseData.content?.[0]?.text) {
-          // MiniMax格式
-          content = responseData.content[0].text;
-        }
-      } catch (e) {
-        console.log('[Test] 无法提取响应内容:', e);
+      let parseMethod = '';
+
+      // OpenAI兼容格式（OpenAI、DeepSeek、Kimi、Zhipu）
+      if (responseData.choices?.[0]?.message?.content) {
+        content = responseData.choices[0].message.content;
+        parseMethod = 'openai_format';
+        console.log('[Test] 使用OpenAI格式解析:', content);
+      }
+      // Gemini格式
+      else if (responseData.candidates?.[0]?.content?.parts?.[0]?.text) {
+        content = responseData.candidates[0].content.parts[0].text;
+        parseMethod = 'gemini_format';
+        console.log('[Test] 使用Gemini格式解析:', content);
+      }
+      // MiniMax格式
+      else if (responseData.content?.[0]?.text) {
+        content = responseData.content[0].text;
+        parseMethod = 'minimax_format';
+        console.log('[Test] 使用MiniMax格式解析:', content);
+      }
+      // 尝试其他可能的格式
+      else if (responseData.reply?.content) {
+        content = responseData.reply.content;
+        parseMethod = 'reply_content';
+        console.log('[Test] 使用reply.content格式解析:', content);
+      }
+      else if (responseData.data?.content) {
+        content = responseData.data.content;
+        parseMethod = 'data_content';
+        console.log('[Test] 使用data.content格式解析:', content);
+      }
+      else if (responseData.output?.text) {
+        content = responseData.output.text;
+        parseMethod = 'output_text';
+        console.log('[Test] 使用output.text格式解析:', content);
+      }
+      else if (typeof responseData === 'string') {
+        content = responseData;
+        parseMethod = 'direct_string';
+        console.log('[Test] 直接返回字符串:', content);
+      }
+
+      if (!content && parseMethod) {
+        console.log('[Test] 无法从', parseMethod, '中提取内容');
       }
 
       return NextResponse.json({
@@ -252,7 +300,8 @@ export async function POST(
         message: 'API连接成功',
         provider: provider.provider_name,
         model: provider.model_name,
-        responsePreview: content || '连接成功但无法解析响应',
+        responsePreview: content || '连接成功但无法解析响应格式',
+        parseMethod: parseMethod || 'unknown',
         statusCode: response.status,
         duration,
         testType: 'api'
