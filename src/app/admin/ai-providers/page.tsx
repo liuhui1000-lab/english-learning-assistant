@@ -260,7 +260,7 @@ export default function AIProvidersPage() {
       });
 
       const data = await response.json();
-      console.log('[UI] 测试API返回:', data);
+      console.log('[UI] 测试API返回（完整）:', JSON.stringify(data, null, 2));
 
       if (data.success && data.valid) {
         // 测试成功
