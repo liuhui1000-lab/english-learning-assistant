@@ -131,36 +131,7 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* 默认账户提示 */}
-          <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-            <p className="text-sm text-blue-700 dark:text-blue-300">
-              <strong>默认管理员账户：</strong>
-              <br />
-              用户名：admin
-              <br />
-              密码：admin123
-            </p>
-          </div>
-
-          {/* 调试工具链接 */}
-          <div className="mt-4 text-center space-y-2">
-            <a
-              href="/debug/login"
-              className="text-sm text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 transition"
-            >
-              遇到问题？使用调试工具
-            </a>
-            <br />
-            <a
-              href="/admin/init"
-              className="text-sm text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 transition"
-            >
-              首次使用？初始化系统
-            </a>
-          </div>
-        </div>
-
-        {/* 页脚 */}
+          {/* 页脚 */}
         <p className="text-center text-slate-500 dark:text-slate-400 text-sm mt-6">
           初中英语学习助手 © 2025
         </p>

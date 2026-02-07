@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { MessageSquare, User, LogOut, Settings, Shield } from 'lucide-react';
+import { MessageSquare, User, LogOut, Settings, Shield, Key } from 'lucide-react';
 
 interface UserInfo {
   userId: string;
@@ -35,11 +35,6 @@ export function Header() {
       loadUserInfo();
     };
 
-    // 定期刷新用户信息（每60秒）
-    const interval = setInterval(() => {
-      loadUserInfo();
-    }, 60000);
-
     // 监听 storage 事件（处理多标签页登录/登出）
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'auth_token') {
@@ -54,7 +49,6 @@ export function Header() {
     window.addEventListener('storage', handleStorageChange);
 
     return () => {
-      clearInterval(interval);
       window.removeEventListener('storage', handleStorageChange);
     };
   }, [router]);
@@ -200,6 +194,12 @@ export function Header() {
                           <Link href="/admin/ai-providers" className="flex items-center gap-2 cursor-pointer">
                             <Settings className="h-4 w-4" />
                             <span>AI配置</span>
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href="/admin/change-password" className="flex items-center gap-2 cursor-pointer">
+                            <Key className="h-4 w-4" />
+                            <span>修改密码</span>
                           </Link>
                         </DropdownMenuItem>
                       </>
