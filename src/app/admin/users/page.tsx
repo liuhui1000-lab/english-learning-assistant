@@ -66,6 +66,8 @@ export default function AdminUsersPage() {
     newPassword: '',
     confirmPassword: '',
   });
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // 加载用户列表
   const loadUsers = async () => {
@@ -200,6 +202,7 @@ export default function AdminUsersPage() {
     if (!selectedUser) return;
 
     try {
+      console.log('准备重置用户密码:', selectedUser.username, selectedUser.id);
       const response = await fetch(`/api/admin/users/${selectedUser.id}/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -207,17 +210,20 @@ export default function AdminUsersPage() {
       });
 
       const data = await response.json();
+      console.log('重置密码响应:', data);
 
       if (data.success) {
         setIsResetPasswordDialogOpen(false);
         setResetPasswordForm({ newPassword: '', confirmPassword: '' });
         alert('密码重置成功！');
       } else {
-        alert(`重置失败：${data.error}`);
+        console.error('重置密码失败:', data.error);
+        console.error('详细错误:', data.message);
+        alert(`重置失败：${data.error}\n\n详细信息：${data.message || '无'}`);
       }
     } catch (error) {
       console.error('重置密码失败:', error);
-      alert('重置密码失败');
+      alert(`重置密码失败：${error instanceof Error ? error.message : String(error)}`);
     }
   };
 
@@ -525,25 +531,45 @@ export default function AdminUsersPage() {
             <form onSubmit={handleResetPassword} className="space-y-4">
               <div>
                 <Label htmlFor="newPassword">新密码</Label>
-                <Input
-                  id="newPassword"
-                  type="password"
-                  value={resetPasswordForm.newPassword}
-                  onChange={(e) => setResetPasswordForm({ ...resetPasswordForm, newPassword: e.target.value })}
-                  required
-                  minLength={6}
-                />
+                <div className="relative">
+                  <Input
+                    id="newPassword"
+                    type={showNewPassword ? 'text' : 'password'}
+                    value={resetPasswordForm.newPassword}
+                    onChange={(e) => setResetPasswordForm({ ...resetPasswordForm, newPassword: e.target.value })}
+                    required
+                    minLength={6}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  >
+                    {showNewPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
               </div>
               <div>
                 <Label htmlFor="confirmPassword">确认密码</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  value={resetPasswordForm.confirmPassword}
-                  onChange={(e) => setResetPasswordForm({ ...resetPasswordForm, confirmPassword: e.target.value })}
-                  required
-                  minLength={6}
-                />
+                <div className="relative">
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={resetPasswordForm.confirmPassword}
+                    onChange={(e) => setResetPasswordForm({ ...resetPasswordForm, confirmPassword: e.target.value })}
+                    required
+                    minLength={6}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
               </div>
               <Button type="submit" className="w-full">
                 重置密码
