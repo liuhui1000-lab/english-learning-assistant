@@ -266,14 +266,13 @@ export default function AIProvidersPage() {
         // 测试成功
         let successMessage = data.message || 'API连接成功';
         if (data.testType === 'api') {
-          successMessage += ` (${data.duration}ms)`;
+          successMessage = `API验证通过 (${(data.duration / 1000).toFixed(1)}秒)`;
         }
 
         console.log('[UI] 测试成功，显示成功提示');
         toast.success(successMessage, {
           icon: <CheckCircle2 className="w-5 h-5 text-green-500" />,
-          description: data.responsePreview ? `响应预览: ${data.responsePreview}` : undefined,
-          duration: 5000,
+          duration: 3000,
         });
       } else {
         // 测试失败
