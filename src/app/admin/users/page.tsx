@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { UserPlus, Edit, Trash2, Key, Search, Shield, User } from 'lucide-react';
+import { UserPlus, Edit, Trash2, Key, Search, Shield, User, Eye, EyeOff } from 'lucide-react';
 
 interface User {
   id: string;
