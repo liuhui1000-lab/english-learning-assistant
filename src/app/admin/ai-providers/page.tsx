@@ -36,7 +36,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Plus, Edit, Trash2, Power, RefreshCw } from 'lucide-react';
+import { Plus, Edit, Trash2, Power, RefreshCw, CheckCircle, XCircle, CheckCircle2 } from 'lucide-react';
 
 interface AIProvider {
   id: number;
@@ -75,6 +75,9 @@ export default function AIProvidersPage() {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingProvider, setEditingProvider] = useState<AIProvider | null>(null);
+  const [testingProviderId, setTestingProviderId] = useState<number | null>(null);
+  const [needsInit, setNeedsInit] = useState(false);
+  const [initializing, setInitializing] = useState(false);
 
   // 表单状态
   const [formData, setFormData] = useState({
@@ -92,14 +95,44 @@ export default function AIProvidersPage() {
 
       if (data.success) {
         setProviders(data.data);
+        setNeedsInit(false);
       } else {
-        toast.error('加载AI配置失败');
+        // 检查是否是表不存在错误
+        if (response.status === 500 || data.error?.message?.includes('does not exist')) {
+          setNeedsInit(true);
+        } else {
+          toast.error('加载AI配置失败');
+        }
       }
     } catch (error) {
       console.error('加载AI配置失败:', error);
-      toast.error('加载AI配置失败');
+      setNeedsInit(true);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleInit = async () => {
+    try {
+      setInitializing(true);
+      const response = await fetch('/api/admin/init-ai-providers-table', {
+        method: 'POST',
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        toast.success('数据库表初始化成功');
+        setNeedsInit(false);
+        loadProviders();
+      } else {
+        toast.error(data.error?.message || '初始化失败');
+      }
+    } catch (error) {
+      console.error('初始化失败:', error);
+      toast.error('初始化失败');
+    } finally {
+      setInitializing(false);
     }
   };
 
@@ -209,6 +242,36 @@ export default function AIProvidersPage() {
     }
   };
 
+  const handleTest = async (id: number) => {
+    try {
+      setTestingProviderId(id);
+
+      const response = await fetch(`/api/admin/ai-providers/${id}/test`, {
+        method: 'POST',
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.valid) {
+        toast.success(data.message || '配置验证通过', {
+          icon: <CheckCircle className="w-5 h-5 text-green-500" />,
+        });
+      } else {
+        const errorMsg = data.errors?.join(', ') || data.message || '配置验证失败';
+        toast.error(errorMsg, {
+          icon: <XCircle className="w-5 h-5 text-red-500" />,
+        });
+      }
+    } catch (error) {
+      console.error('测试AI配置失败:', error);
+      toast.error('测试AI配置失败', {
+        icon: <XCircle className="w-5 h-5 text-red-500" />,
+      });
+    } finally {
+      setTestingProviderId(null);
+    }
+  };
+
   const openEditDialog = (provider: AIProvider) => {
     setEditingProvider(provider);
     setFormData({
@@ -293,6 +356,27 @@ export default function AIProvidersPage() {
         <CardContent>
           {loading ? (
             <div className="text-center py-8 text-gray-500">加载中...</div>
+          ) : needsInit ? (
+            <div className="text-center py-12 space-y-4">
+              <div className="text-lg font-semibold text-gray-700">
+                数据库表未初始化
+              </div>
+              <div className="text-sm text-gray-500">
+                需要创建ai_providers表才能管理AI配置
+              </div>
+              <Button
+                onClick={handleInit}
+                disabled={initializing}
+                className="flex items-center gap-2 mx-auto"
+              >
+                {initializing ? (
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Plus className="w-4 h-4" />
+                )}
+                {initializing ? '初始化中...' : '初始化数据库表'}
+              </Button>
+            </div>
           ) : providers.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               暂无AI配置，点击"添加配置"开始
@@ -336,6 +420,20 @@ export default function AIProvidersPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleTest(provider.id)}
+                          disabled={testingProviderId === provider.id}
+                          className="flex items-center gap-1"
+                        >
+                          {testingProviderId === provider.id ? (
+                            <RefreshCw className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <CheckCircle2 className="w-3 h-3" />
+                          )}
+                          测试
+                        </Button>
                         {!provider.is_active && (
                           <Button
                             variant="outline"

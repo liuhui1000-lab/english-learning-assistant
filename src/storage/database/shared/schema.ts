@@ -354,3 +354,24 @@ export const insertUserMistakeStatsSchema = createInsertSchema(userMistakeStats)
 export const selectUserMistakeStatsSchema = createSelectSchema(userMistakeStats)
 export type InsertUserMistakeStats = z.infer<typeof insertUserMistakeStatsSchema>
 export type UserMistakeStats = typeof userMistakeStats.$inferSelect
+
+// AI Providers table
+export const aiProviders = pgTable("ai_providers", {
+    id: integer().primaryKey().generatedAlwaysAsIdentity().notNull(),
+    providerName: varchar("provider_name", { length: 50 }).notNull(),
+    modelName: varchar("model_name", { length: 100 }).notNull(),
+    apiKey: varchar("api_key", { length: 500 }).notNull(),
+    isActive: boolean("is_active").default(false).notNull(),
+    priority: integer().default(0).notNull(),
+    config: jsonb().$type<Record<string, any>>(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+    index("ai_providers_provider_name_idx").using("btree", table.providerName.asc().nullsLast().op("text_ops")),
+    index("ai_providers_is_active_idx").using("btree", table.isActive.asc().nullsLast().op("bool_ops")),
+]);
+
+export const insertAIProviderSchema = createInsertSchema(aiProviders)
+export const selectAIProviderSchema = createSelectSchema(aiProviders)
+export type InsertAIProvider = z.infer<typeof insertAIProviderSchema>
+export type AIProvider = typeof aiProviders.$inferSelect
