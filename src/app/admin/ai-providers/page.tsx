@@ -253,25 +253,29 @@ export default function AIProvidersPage() {
   const handleTest = async (id: number) => {
     try {
       setTestingProviderId(id);
+      console.log('[UI] 开始测试AI配置，ID:', id);
 
       const response = await fetch(`/api/admin/ai-providers/${id}/test`, {
         method: 'POST',
       });
 
       const data = await response.json();
+      console.log('[UI] 测试API返回:', data);
 
       if (data.success && data.valid) {
+        console.log('[UI] 测试成功，显示成功提示');
         toast.success(data.message || '配置验证通过', {
-          icon: <CheckCircle className="w-5 h-5 text-green-500" />,
+          icon: <CheckCircle2 className="w-5 h-5 text-green-500" />,
         });
       } else {
+        console.log('[UI] 测试失败:', data);
         const errorMsg = data.errors?.join(', ') || data.message || '配置验证失败';
         toast.error(errorMsg, {
           icon: <XCircle className="w-5 h-5 text-red-500" />,
         });
       }
     } catch (error) {
-      console.error('测试AI配置失败:', error);
+      console.error('[UI] 测试AI配置失败:', error);
       toast.error('测试AI配置失败', {
         icon: <XCircle className="w-5 h-5 text-red-500" />,
       });
