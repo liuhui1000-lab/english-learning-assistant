@@ -30,8 +30,8 @@ export function Header() {
   useEffect(() => {
     loadUserInfo();
 
-    // 监听路由变化，刷新用户信息
-    const handleRouteChange = () => {
+    // 监听 auth-changed 事件（登录/登出）
+    const handleAuthChange = () => {
       loadUserInfo();
     };
 
@@ -46,9 +46,11 @@ export function Header() {
       }
     };
 
+    window.addEventListener('auth-changed', handleAuthChange as EventListener);
     window.addEventListener('storage', handleStorageChange);
 
     return () => {
+      window.removeEventListener('auth-changed', handleAuthChange as EventListener);
       window.removeEventListener('storage', handleStorageChange);
     };
   }, [router]);
@@ -72,6 +74,8 @@ export function Header() {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
       setUserInfo(null);
+      // 通知其他组件用户已登出
+      window.dispatchEvent(new CustomEvent('auth-changed', { detail: { loggedIn: false } }));
       router.push('/login');
     } catch (error) {
       console.error('登出失败:', error);
