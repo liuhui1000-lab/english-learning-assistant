@@ -56,6 +56,7 @@ const PROVIDER_OPTIONS = [
   { value: 'openai', label: 'OpenAI', icon: '🧠' },
   { value: 'minimax', label: 'MiniMax', icon: '⚡' },
   { value: 'claude', label: 'Claude (Anthropic)', icon: '🎭' },
+  { value: 'zhipu', label: '智谱清言', icon: '🎓' },
 ];
 
 const PROVIDER_LABELS: Record<string, string> = {
@@ -65,6 +66,7 @@ const PROVIDER_LABELS: Record<string, string> = {
   openai: 'OpenAI',
   minimax: 'MiniMax',
   claude: 'Claude (Anthropic)',
+  zhipu: '智谱清言',
 };
 
 export default function AIProvidersPage() {
