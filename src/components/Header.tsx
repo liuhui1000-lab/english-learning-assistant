@@ -174,6 +174,12 @@ export function Header() {
                         <span>学习记录</span>
                       </Link>
                     </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/profile/change-password" className="flex items-center gap-2 cursor-pointer">
+                        <Key className="h-4 w-4" />
+                        <span>修改密码</span>
+                      </Link>
+                    </DropdownMenuItem>
 
                     {/* 管理员菜单项 */}
                     {userInfo.role === 'admin' && (

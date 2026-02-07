@@ -2,9 +2,12 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { NavigationButtons } from '@/components/NavigationButtons';
+import { Eye, EyeOff } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import Link from 'next/link';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export default function ChangePasswordPage() {
   const router = useRouter();
@@ -82,11 +85,8 @@ export default function ChangePasswordPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 p-4">
       <div className="max-w-2xl mx-auto">
-        {/* 返回按钮 */}
-        <Link href="/dashboard" className="inline-flex items-center gap-2 text-slate-600 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 mb-4 transition">
-          <ArrowLeft className="h-4 w-4" />
-          <span>返回 Dashboard</span>
-        </Link>
+        {/* 导航按钮 */}
+        <NavigationButtons backLabel="返回控制台" />
 
         <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8">
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">
