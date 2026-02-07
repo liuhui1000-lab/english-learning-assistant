@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
     // 查询用户信息
     const result = await query(
       `SELECT id, username, password_hash FROM users WHERE id = $1`,
-      [user.userId]
+      [user.id]
     );
 
     if (!result.rows || result.rows.length === 0) {
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
       `UPDATE users
        SET password_hash = $1, updated_at = $2
        WHERE id = $3`,
-      [newPasswordHash, new Date().toISOString(), user.userId]
+      [newPasswordHash, new Date().toISOString(), user.id]
     );
 
     return NextResponse.json({
