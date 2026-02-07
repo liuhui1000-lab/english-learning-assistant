@@ -98,23 +98,34 @@ export async function GET(request: NextRequest) {
 
     console.log('用户总数:', total);
 
-    // 获取每个用户的统计数据
-    const userIds = usersResult.rows.map((u: any) => u.id);
-    const statsQuery = userIds.length > 0
-      ? `
-        SELECT
-          user_id,
-          total_count,
-          knowledge_points,
-          difficulties,
-          sources
-        FROM user_mistake_stats
-        WHERE user_id = ANY($1)
-      `
-      : '';
+    // 获取每个用户的统计数据（允许失败）
+    let statsMap = new Map();
+    try {
+      const userIds = usersResult.rows.map((u: any) => u.id);
+      const statsQuery = userIds.length > 0
+        ? `
+          SELECT
+            user_id,
+            total_count,
+            knowledge_points,
+            difficulties,
+            sources
+          FROM user_mistake_stats
+          WHERE user_id = ANY($1)
+        `
+        : '';
 
-    const statsResult = statsQuery ? await query(statsQuery, [userIds]) : { rows: [] };
-    const statsMap = new Map(statsResult.rows.map((s: any) => [s.user_id, s]));
+      if (statsQuery) {
+        const statsResult = await query(statsQuery, [userIds]);
+        statsMap = new Map(statsResult.rows.map((s: any) => [s.user_id, s]));
+        console.log('查询到', statsMap.size, '个用户的统计数据');
+      } else {
+        console.log('没有用户需要查询统计');
+      }
+    } catch (statsError) {
+      console.error('查询用户统计失败, user_mistake_stats 表可能不存在:', statsError);
+      // statsMap 保持为空
+    }
 
     // 组装数据
     const users = usersResult.rows.map((user: any) => ({

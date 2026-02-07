@@ -70,21 +70,29 @@ export default function AdminUsersPage() {
   // 加载用户列表
   const loadUsers = async () => {
     try {
+      setLoading(true);
+
       const params = new URLSearchParams();
       if (roleFilter !== 'all') {
         params.append('role', roleFilter);
       }
 
+      console.log('加载用户列表，参数:', params.toString());
       const response = await fetch(`/api/admin/users?${params.toString()}`);
       const data = await response.json();
 
+      console.log('用户列表响应:', data);
+
       if (data.success) {
         setUsers(data.data);
+        console.log('加载了', data.data.length, '个用户');
       } else {
         console.error('加载用户列表失败:', data.error);
+        alert(`加载失败：${data.error}`);
       }
     } catch (error) {
       console.error('加载用户列表失败:', error);
+      alert('加载用户列表失败');
     } finally {
       setLoading(false);
     }
