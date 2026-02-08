@@ -271,12 +271,12 @@ export class WordFamilyManager {
       await db
         .update(userWordFamilyProgress)
         .set({
-          reviewCount: (existing[0].reviewCount || 0) + 1,
-          masteryLevel: Math.min((existing[0].masteryLevel || 0) + 1, 5),
+          reviewCount: (existing.reviewCount || 0) + 1,
+          masteryLevel: Math.min((existing.masteryLevel || 0) + 1, 5),
           nextReviewAt: nextReviewDate.toISOString(),
           lastReviewAt: new Date().toISOString(),
         })
-        .where(eq(userWordFamilyProgress.id, existing[0].id));
+        .where(eq(userWordFamilyProgress.id, existing.id));
     } else {
       // 创建新记录
       await db.insert(userWordFamilyProgress).values({
