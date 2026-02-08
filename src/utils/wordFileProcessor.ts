@@ -92,7 +92,7 @@ export function extractWordsFromText(text: string): WordData[] {
       const cleanDefinition = definition.replace(/[\s\r\n]+/g, ' ').trim();
 
       words.push({
-        word: word.toLowerCase(),
+        word: word, // 保持原始大小写
         definition: cleanDefinition,
       });
     } else {
@@ -100,7 +100,7 @@ export function extractWordsFromText(text: string): WordData[] {
       const pureWordMatch = line.match(/^([a-zA-Z]+)$/);
       if (pureWordMatch) {
         words.push({
-          word: pureWordMatch[1].toLowerCase(),
+          word: pureWordMatch[1], // 保持原始大小写
         });
       } else {
         // 尝试提取行首的第一个英文单词
@@ -113,14 +113,14 @@ export function extractWordsFromText(text: string): WordData[] {
             const chinesePart = line.substring(firstWordMatch[0].length).replace(/^[^\u4e00-\u9fa5]+/, '').trim();
             if (chinesePart.length > 0) {
               words.push({
-                word: firstWordMatch[1].toLowerCase(),
+                word: firstWordMatch[1], // 保持原始大小写
                 definition: chinesePart,
               });
             }
           } else {
             // 没有中文，只保存单词
             words.push({
-              word: firstWordMatch[1].toLowerCase(),
+              word: firstWordMatch[1], // 保持原始大小写
             });
           }
         }
@@ -152,7 +152,7 @@ function extractWordInfo(content: string): WordData | null {
   if (match1) {
     const [, word, pronunciation, partOfSpeech, definition] = match1;
     return {
-      word: word.trim().toLowerCase(),
+      word: word.trim(), // 保持原始大小写
       pronunciation: pronunciation.trim(),
       partOfSpeech: partOfSpeech.trim(),
       definition: definition.trim(),
@@ -164,7 +164,7 @@ function extractWordInfo(content: string): WordData | null {
   if (match2) {
     const [, word, pronunciation, definition] = match2;
     return {
-      word: word.trim().toLowerCase(),
+      word: word.trim(), // 保持原始大小写
       pronunciation: pronunciation.trim(),
       definition: definition.trim(),
     };
@@ -175,7 +175,7 @@ function extractWordInfo(content: string): WordData | null {
   if (match3) {
     const [, word, partOfSpeech, definition] = match3;
     return {
-      word: word.trim().toLowerCase(),
+      word: word.trim(), // 保持原始大小写
       partOfSpeech: partOfSpeech.trim(),
       definition: definition.trim(),
     };
@@ -186,7 +186,7 @@ function extractWordInfo(content: string): WordData | null {
   if (match4) {
     const [, word, definition] = match4;
     return {
-      word: word.trim().toLowerCase(),
+      word: word.trim(), // 保持原始大小写
       definition: definition.trim(),
     };
   }
@@ -200,14 +200,14 @@ function extractWordInfo(content: string): WordData | null {
 
     if (isPartOfSpeech && definition) {
       return {
-        word: word.trim().toLowerCase(),
+        word: word.trim(), // 保持原始大小写
         partOfSpeech: posOrDef.trim(),
         definition: definition.trim(),
       };
     } else if (posOrDef && /[\u4e00-\u9fa5]/.test(posOrDef)) {
       // 如果第二部分是中文，作为词义
       return {
-        word: word.trim().toLowerCase(),
+        word: word.trim(), // 保持原始大小写
         definition: (posOrDef + ' ' + (definition || '')).trim(),
       };
     }
@@ -217,7 +217,7 @@ function extractWordInfo(content: string): WordData | null {
   const pureWordMatch = content.match(/^([a-zA-Z\s\-']+)$/);
   if (pureWordMatch && pureWordMatch[1].trim().length > 1) {
     return {
-      word: pureWordMatch[1].trim().toLowerCase(),
+      word: pureWordMatch[1].trim(), // 保持原始大小写
     };
   }
 
@@ -230,12 +230,12 @@ function extractWordInfo(content: string): WordData | null {
 
     if (chinesePart.length > 0) {
       return {
-        word: firstWordMatch[1].trim().toLowerCase(),
+        word: firstWordMatch[1].trim(), // 保持原始大小写
         definition: chinesePart,
       };
     } else {
       return {
-        word: firstWordMatch[1].trim().toLowerCase(),
+        word: firstWordMatch[1].trim(), // 保持原始大小写
       };
     }
   }

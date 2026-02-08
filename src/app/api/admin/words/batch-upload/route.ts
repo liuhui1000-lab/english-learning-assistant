@@ -47,7 +47,8 @@ export async function POST(request: NextRequest) {
     let failedWords = 0;
 
     // 批量检查已存在的单词
-    // 标准化所有单词为小写进行查询和比较
+    // 保持单词的原始大小写（专有名词需要大写）
+    // 在查询时使用 LOWER(word) 进行比较
     const wordsWithLower = wordsData.map((w: any) => ({
       ...w,
       wordLower: w.word.toLowerCase()
@@ -57,18 +58,19 @@ export async function POST(request: NextRequest) {
     console.log(`[批量上传] 查询已存在单词，数量: ${allWordsLower.length}`);
     console.log(`[批量上传] 单词列表:`, allWordsLower.slice(0, 10));
 
-    const existingWordsResult = await db
-      .select()
-      .from(words)
-      .where(inArray(words.word, allWordsLower));
+    // 使用原生 SQL 查询，因为需要 LOWER() 函数
+    const existingWordsResult = await db.execute(`
+      SELECT * FROM words
+      WHERE LOWER(word) = ANY($1)
+    `, [allWordsLower]);
 
-    console.log(`[批量上传] 查询结果: 已存在 ${existingWordsResult.length} 个单词`);
-    if (existingWordsResult.length > 0) {
-      console.log(`[批量上传] 已存在单词示例:`, existingWordsResult.slice(0, 3).map(w => w.word));
+    console.log(`[批量上传] 查询结果: 已存在 ${existingWordsResult.rows.length} 个单词`);
+    if (existingWordsResult.rows.length > 0) {
+      console.log(`[批量上传] 已存在单词示例:`, existingWordsResult.rows.slice(0, 3).map((w: any) => w.word));
     }
 
     const existingWordsMap = new Map(
-      existingWordsResult.map(w => [w.word.toLowerCase(), w])
+      existingWordsResult.rows.map((w: any) => [w.word.toLowerCase(), w])
     );
 
     // 批量插入新单词（使用小写比较）
@@ -78,7 +80,7 @@ export async function POST(request: NextRequest) {
     if (newWordsList.length > 0) {
       try {
         const insertData = newWordsList.map((wordData: any) => ({
-          word: wordData.wordLower, // 统一使用小写
+          word: wordData.word, // 保持原始大小写（专有名词需要大写）
           phonetic: wordData.pronunciation || '',
           meaning: wordData.definition || '',
           example: wordData.example || '',

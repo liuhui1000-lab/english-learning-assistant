@@ -124,7 +124,8 @@ export const words = pgTable("words", {
         index("words_grade_idx").using("btree", table.grade.asc().nullsLast().op("text_ops")),
         index("words_semester_idx").using("btree", table.semester.asc().nullsLast().op("text_ops")),
         index("words_grade_semester_idx").using("btree", sql`${table.grade}, ${table.semester}`),
-        unique("words_word_unique").on(table.word),
+        // 注意：移除了 words_word_unique 唯一约束，以支持专有名词的原始大小写
+        // 在应用层使用 LOWER(word) 进行去重和查询
         foreignKey({
                         columns: [table.wordFamilyId],
                         foreignColumns: [wordFamilies.id],
