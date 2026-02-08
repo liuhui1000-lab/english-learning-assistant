@@ -26,28 +26,14 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.formData();
     const file = formData.get('file') as File;
-    const libraryType = formData.get('libraryType') as string;
-    const version = formData.get('version') as string;
+    const libraryType = formData.get('libraryType') as string || 'word';
+    const version = formData.get('version') as string || 'v1.0';
     const description = formData.get('description') as string;
 
     // 验证必填字段
     if (!file) {
       return NextResponse.json(
         { error: '请选择文件' },
-        { status: 400 }
-      );
-    }
-
-    if (!libraryType) {
-      return NextResponse.json(
-        { error: '请选择题库类型' },
-        { status: 400 }
-      );
-    }
-
-    if (!version) {
-      return NextResponse.json(
-        { error: '请输入版本号' },
         { status: 400 }
       );
     }

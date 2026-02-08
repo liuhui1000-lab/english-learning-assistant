@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.formData();
     const file = formData.get('file') as File;
-    const version = formData.get('version') as string;
+    const version = formData.get('version') as string || 'v1.0';
     const grade = formData.get('grade') as string || '8年级';
     const description = formData.get('description') as string;
 
@@ -36,13 +36,6 @@ export async function POST(request: NextRequest) {
     if (!file) {
       return NextResponse.json(
         { error: '请选择文件' },
-        { status: 400 }
-      );
-    }
-
-    if (!version) {
-      return NextResponse.json(
-        { error: '请输入版本号' },
         { status: 400 }
       );
     }
