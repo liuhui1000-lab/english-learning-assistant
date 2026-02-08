@@ -47,14 +47,20 @@ export async function POST(request: NextRequest) {
     let failedWords = 0;
 
     // 批量检查已存在的单词
-    const allWords = wordsData.map((w: any) => w.word);
-    console.log(`[批量上传] 查询已存在单词，数量: ${allWords.length}`);
-    console.log(`[批量上传] 单词列表:`, allWords.slice(0, 10));
+    // 标准化所有单词为小写进行查询和比较
+    const wordsWithLower = wordsData.map((w: any) => ({
+      ...w,
+      wordLower: w.word.toLowerCase()
+    }));
+
+    const allWordsLower = wordsWithLower.map(w => w.wordLower);
+    console.log(`[批量上传] 查询已存在单词，数量: ${allWordsLower.length}`);
+    console.log(`[批量上传] 单词列表:`, allWordsLower.slice(0, 10));
 
     const existingWordsResult = await db
       .select()
       .from(words)
-      .where(inArray(words.word, allWords));
+      .where(inArray(words.word, allWordsLower));
 
     console.log(`[批量上传] 查询结果: 已存在 ${existingWordsResult.length} 个单词`);
     if (existingWordsResult.length > 0) {
@@ -66,13 +72,13 @@ export async function POST(request: NextRequest) {
     );
 
     // 批量插入新单词（使用小写比较）
-    const newWordsList = wordsData.filter((w: any) => !existingWordsMap.has(w.word.toLowerCase()));
+    const newWordsList = wordsWithLower.filter(w => !existingWordsMap.has(w.wordLower));
     console.log(`[批量上传] 准备插入 ${newWordsList.length} 个新单词`);
 
     if (newWordsList.length > 0) {
       try {
         const insertData = newWordsList.map((wordData: any) => ({
-          word: wordData.word.toLowerCase(), // 统一使用小写
+          word: wordData.wordLower, // 统一使用小写
           phonetic: wordData.pronunciation || '',
           meaning: wordData.definition || '',
           example: wordData.example || '',
@@ -95,11 +101,11 @@ export async function POST(request: NextRequest) {
     }
 
     // 批量更新已存在的单词
-    const wordsToUpdate = wordsData.filter((w: any) => existingWordsMap.has(w.word));
+    const wordsToUpdate = wordsWithLower.filter(w => existingWordsMap.has(w.wordLower));
     if (wordsToUpdate.length > 0) {
       for (const wordData of wordsToUpdate) {
         try {
-          const existingWord = existingWordsMap.get(wordData.word)!;
+          const existingWord = existingWordsMap.get(wordData.wordLower)!;
           await db
             .update(words)
             .set({

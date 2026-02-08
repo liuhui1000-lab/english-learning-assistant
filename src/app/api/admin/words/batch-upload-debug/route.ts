@@ -45,13 +45,19 @@ export async function POST(request: NextRequest) {
     let failedWords = 0;
 
     // 批量检查已存在的单词
-    const allWords = wordsData.map((w: any) => w.word);
-    console.log('[批量上传调试] 查询单词列表:', allWords.slice(0, 5));
+    // 标准化所有单词为小写进行查询和比较
+    const wordsWithLower = wordsData.map((w: any) => ({
+      ...w,
+      wordLower: w.word.toLowerCase()
+    }));
+
+    const allWordsLower = wordsWithLower.map(w => w.wordLower);
+    console.log('[批量上传调试] 查询单词列表:', allWordsLower.slice(0, 5));
 
     const existingWordsResult = await db
       .select()
       .from(words)
-      .where(inArray(words.word, allWords));
+      .where(inArray(words.word, allWordsLower));
 
     console.log('[批量上传调试] 已存在单词数:', existingWordsResult.length);
     if (existingWordsResult.length > 0) {
@@ -63,14 +69,14 @@ export async function POST(request: NextRequest) {
     );
 
     // 批量插入新单词
-    const newWordsList = wordsData.filter((w: any) => !existingWordsMap.has(w.word.toLowerCase()));
+    const newWordsList = wordsWithLower.filter(w => !existingWordsMap.has(w.wordLower));
     console.log('[批量上传调试] 准备插入单词数:', newWordsList.length);
     console.log('[批量上传调试] 待插入单词示例:', newWordsList.slice(0, 3));
 
     if (newWordsList.length > 0) {
       try {
         const insertData = newWordsList.map((wordData: any) => ({
-          word: wordData.word.toLowerCase(),
+          word: wordData.wordLower,
           phonetic: wordData.pronunciation || '',
           meaning: wordData.definition || '',
           example: wordData.example || '',
