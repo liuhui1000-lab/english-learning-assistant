@@ -4,6 +4,20 @@ import { createInsertSchema, createSelectSchema } from "drizzle-zod"
 import { z } from "zod"
 
 
+// 词族表（新增）
+export const wordFamilies = pgTable("word_families", {
+    id: varchar({ length: 36 }).default(sql`gen_random_uuid()`).primaryKey().notNull(),
+    baseWord: varchar("base_word", { length: 100 }).notNull(),
+    familyName: varchar("family_name", { length: 100 }).notNull(),
+    sourceType: varchar("source_type", { length: 20 }).default('list').notNull(), // 'list' | 'exam' | 'mistake'
+    sourceInfo: varchar("source_info", { length: 200 }), // '6年级清单' | '2025年模拟卷A' | '错题收集'
+    difficulty: integer().default(1),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+    index("word_families_base_word_idx").using("btree", table.baseWord.asc().nullsLast().op("text_ops")),
+    index("word_families_source_type_idx").using("btree", table.sourceType.asc().nullsLast().op("text_ops")),
+])
+
 
 export const collocations = pgTable("collocations", {
         id: varchar({ length: 36 }).default(sql`gen_random_uuid()`).primaryKey().notNull(),
@@ -13,6 +27,8 @@ export const collocations = pgTable("collocations", {
         exampleTranslation: text("example_translation"),
         category: varchar({ length: 50 }),
         difficulty: integer().default(1),
+        sourceType: varchar("source_type", { length: 20 }).default('list').notNull(), // 'list' | 'exam' | 'mistake'
+        sourceInfo: varchar("source_info", { length: 200 }), // '6年级清单' | '2025年模拟卷A'
         createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
         index("collocations_phrase_idx").using("btree", table.phrase.asc().nullsLast().op("text_ops")),
@@ -23,7 +39,10 @@ export const grammarPoints = pgTable("grammar_points", {
         name: varchar({ length: 100 }).notNull(),
         description: text(),
         category: varchar({ length: 50 }),
-        level: integer().default(1),
+        level: varchar("level", { length: 20 }), // '6年级' | '7年级' | '8年级' | '9年级'
+        difficulty: integer().default(1),
+        sourceType: varchar("source_type", { length: 20 }).default('preset').notNull(), // 'preset' | 'exam'
+        sourceInfo: varchar("source_info", { length: 200 }), // '系统预设' | '2025年模拟卷A'
         createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
         index("grammar_points_name_idx").using("btree", table.name.asc().nullsLast().op("text_ops")),
@@ -83,7 +102,9 @@ export const userReadingProgress = pgTable("user_reading_progress", {
 
 export const words = pgTable("words", {
         id: varchar({ length: 36 }).default(sql`gen_random_uuid()`).primaryKey().notNull(),
+        wordFamilyId: varchar("word_family_id", { length: 36 }), // 关联词族
         word: varchar({ length: 100 }).notNull(),
+        wordType: varchar("word_type", { length: 20 }), // 'noun' | 'adj' | 'verb' | 'adv'
         phonetic: varchar({ length: 100 }),
         meaning: text().notNull(),
         example: text(),
@@ -92,7 +113,13 @@ export const words = pgTable("words", {
         createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
         index("words_word_idx").using("btree", table.word.asc().nullsLast().op("text_ops")),
+        index("words_word_family_id_idx").using("btree", table.wordFamilyId.asc().nullsLast().op("text_ops")),
         unique("words_word_unique").on(table.word),
+        foreignKey({
+                        columns: [table.wordFamilyId],
+                        foreignColumns: [wordFamilies.id],
+                        name: "words_word_family_id_fkey"
+                }).onDelete("set null"),
 ]);
 
 export const userWordProgress = pgTable("user_word_progress", {
@@ -137,13 +164,22 @@ export const userTransformationProgress = pgTable("user_transformation_progress"
 
 export const wordTransformations = pgTable("word_transformations", {
         id: varchar({ length: 36 }).default(sql`gen_random_uuid()`).primaryKey().notNull(),
+        wordFamilyId: varchar("word_family_id", { length: 36 }), // 关联词族
         baseWord: varchar("base_word", { length: 100 }).notNull(),
         baseMeaning: text("base_meaning").notNull(),
         transformations: jsonb().notNull(),
         difficulty: integer().default(1),
+        sourceType: varchar("source_type", { length: 20 }).default('list').notNull(), // 'list' | 'exam' | 'mistake'
+        sourceInfo: varchar("source_info", { length: 200 }), // '6年级清单' | '2025年模拟卷A'
         createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
         index("word_transformations_base_word_idx").using("btree", table.baseWord.asc().nullsLast().op("text_ops")),
+        index("word_transformations_word_family_id_idx").using("btree", table.wordFamilyId.asc().nullsLast().op("text_ops")),
+        foreignKey({
+                        columns: [table.wordFamilyId],
+                        foreignColumns: [wordFamilies.id],
+                        name: "word_transformations_word_family_id_fkey"
+                }).onDelete("set null"),
 ]);
 
 export const transformationMistakes = pgTable("transformation_mistakes", {
@@ -295,6 +331,78 @@ export const userMistakeStats = pgTable("user_mistake_stats", {
     index("user_mistake_stats_last_analysis_date_idx").using("btree", table.lastAnalysisDate.desc().nullsLast().op("timestamptz_ops")),
 ]);
 
+// 用户词族学习进度表（新增）
+export const userWordFamilyProgress = pgTable("user_word_family_progress", {
+    id: varchar({ length: 36 }).default(sql`gen_random_uuid()`).primaryKey().notNull(),
+    userId: varchar("user_id", { length: 100 }).notNull(),
+    wordFamilyId: varchar("word_family_id", { length: 36 }).notNull(),
+    masteryLevel: integer("mastery_level").default(0), // 0-5
+    reviewCount: integer("review_count").default(0),
+    lastReviewAt: timestamp("last_review_at", { withTimezone: true, mode: 'string' }),
+    nextReviewAt: timestamp("next_review_at", { withTimezone: true, mode: 'string' }),
+    errorCount: integer("error_count").default(0),
+    consecutiveCorrect: integer("consecutive_correct").default(0),
+    learningSessions: integer("learning_sessions").default(0),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }),
+}, (table) => [
+    index("user_word_family_progress_user_id_idx").using("btree", table.userId.asc().nullsLast().op("text_ops")),
+    index("user_word_family_progress_word_family_id_idx").using("btree", table.wordFamilyId.asc().nullsLast().op("text_ops")),
+    index("user_word_family_progress_next_review_at_idx").using("btree", table.nextReviewAt.asc().nullsLast().op("timestamptz_ops")),
+    foreignKey({
+        columns: [table.wordFamilyId],
+        foreignColumns: [wordFamilies.id],
+        name: "user_word_family_progress_word_family_id_fkey"
+    }).onDelete("cascade"),
+]);
+
+// 用户固定搭配学习进度表（新增）
+export const userCollocationProgress = pgTable("user_collocation_progress", {
+    id: varchar({ length: 36 }).default(sql`gen_random_uuid()`).primaryKey().notNull(),
+    userId: varchar("user_id", { length: 100 }).notNull(),
+    collocationId: varchar("collocation_id", { length: 36 }).notNull(),
+    masteryLevel: integer("mastery_level").default(0), // 0-5
+    reviewCount: integer("review_count").default(0),
+    lastReviewAt: timestamp("last_review_at", { withTimezone: true, mode: 'string' }),
+    nextReviewAt: timestamp("next_review_at", { withTimezone: true, mode: 'string' }),
+    errorCount: integer("error_count").default(0),
+    consecutiveCorrect: integer("consecutive_correct").default(0),
+    learningSessions: integer("learning_sessions").default(0),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }),
+}, (table) => [
+    index("user_collocation_progress_user_id_idx").using("btree", table.userId.asc().nullsLast().op("text_ops")),
+    index("user_collocation_progress_collocation_id_idx").using("btree", table.collocationId.asc().nullsLast().op("text_ops")),
+    index("user_collocation_progress_next_review_at_idx").using("btree", table.nextReviewAt.asc().nullsLast().op("timestamptz_ops")),
+    foreignKey({
+        columns: [table.collocationId],
+        foreignColumns: [collocations.id],
+        name: "user_collocation_progress_collocation_id_fkey"
+    }).onDelete("cascade"),
+]);
+
+// 用户语法学习进度表（新增）
+export const userGrammarProgress = pgTable("user_grammar_progress", {
+    id: varchar({ length: 36 }).default(sql`gen_random_uuid()`).primaryKey().notNull(),
+    userId: varchar("user_id", { length: 100 }).notNull(),
+    grammarPointId: varchar("grammar_point_id", { length: 36 }).notNull(),
+    masteryLevel: integer("mastery_level").default(0), // 0-5
+    reviewCount: integer("review_count").default(0),
+    lastReviewedAt: timestamp("last_reviewed_at", { withTimezone: true, mode: 'string' }),
+    nextReviewAt: timestamp("next_review_at", { withTimezone: true, mode: 'string' }),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }),
+}, (table) => [
+    index("user_grammar_progress_user_id_idx").using("btree", table.userId.asc().nullsLast().op("text_ops")),
+    index("user_grammar_progress_grammar_point_id_idx").using("btree", table.grammarPointId.asc().nullsLast().op("text_ops")),
+    index("user_grammar_progress_next_review_at_idx").using("btree", table.nextReviewAt.asc().nullsLast().op("timestamptz_ops")),
+    foreignKey({
+        columns: [table.grammarPointId],
+        foreignColumns: [grammarPoints.id],
+        name: "user_grammar_progress_grammar_point_id_fkey"
+    }).onDelete("cascade"),
+]);
+
 // Zod Schemas for validation
 
 export const insertWordSchema = createInsertSchema(words)
@@ -375,3 +483,24 @@ export const insertAIProviderSchema = createInsertSchema(aiProviders)
 export const selectAIProviderSchema = createSelectSchema(aiProviders)
 export type InsertAIProvider = z.infer<typeof insertAIProviderSchema>
 export type AIProvider = typeof aiProviders.$inferSelect
+
+// 词族相关schemas
+export const insertWordFamilySchema = createInsertSchema(wordFamilies)
+export const selectWordFamilySchema = createSelectSchema(wordFamilies)
+export type InsertWordFamily = z.infer<typeof insertWordFamilySchema>
+export type WordFamily = typeof wordFamilies.$inferSelect
+
+export const insertUserWordFamilyProgressSchema = createInsertSchema(userWordFamilyProgress)
+export const selectUserWordFamilyProgressSchema = createSelectSchema(userWordFamilyProgress)
+export type InsertUserWordFamilyProgress = z.infer<typeof insertUserWordFamilyProgressSchema>
+export type UserWordFamilyProgress = typeof userWordFamilyProgress.$inferSelect
+
+export const insertUserCollocationProgressSchema = createInsertSchema(userCollocationProgress)
+export const selectUserCollocationProgressSchema = createSelectSchema(userCollocationProgress)
+export type InsertUserCollocationProgress = z.infer<typeof insertUserCollocationProgressSchema>
+export type UserCollocationProgress = typeof userCollocationProgress.$inferSelect
+
+export const insertUserGrammarProgressSchema = createInsertSchema(userGrammarProgress)
+export const selectUserGrammarProgressSchema = createSelectSchema(userGrammarProgress)
+export type InsertUserGrammarProgress = z.infer<typeof insertUserGrammarProgressSchema>
+export type UserGrammarProgress = typeof userGrammarProgress.$inferSelect
