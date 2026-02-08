@@ -9,6 +9,7 @@ import { words, type Word } from '@/storage/database/shared/schema';
 import { checkPermission } from '@/utils/auth';
 import { z } from 'zod';
 import { randomUUID } from 'crypto';
+import { eq } from 'drizzle-orm';
 
 // 单词导入验证 schema
 const wordImportSchema = z.object({
@@ -85,7 +86,7 @@ export async function POST(request: NextRequest) {
           .select()
           .from(words)
           .where(
-            (params: any) => params.words.word === wordData.word.toLowerCase()
+            eq(words.word, wordData.word.toLowerCase())
           );
 
         if (existingWords.length > 0) {
