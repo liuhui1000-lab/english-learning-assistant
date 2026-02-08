@@ -46,6 +46,9 @@ export function extractWordsFromText(text: string): WordData[] {
     .map(line => line.trim())
     .filter(line => line.length > 0);
 
+  console.log('[wordFileProcessor] 文本总行数:', lines.length);
+  console.log('[wordFileProcessor] 前 10 行内容:', lines.slice(0, 10));
+
   const words: WordData[] = [];
 
   for (const line of lines) {
@@ -55,11 +58,12 @@ export function extractWordsFromText(text: string): WordData[] {
     // 跳过纯中文行
     if (/^[\u4e00-\u9fa5\s]+$/.test(line)) continue;
 
-    // 尝试匹配简化格式：单词 + 分隔符 + 中文词义
-    const spaceMatch = line.match(/^([a-zA-Z]+)\s+([\u4e00-\u9fa5\s].+)$/);
-    const separatorMatch = line.match(/^([a-zA-Z]+)\s*[-：:、]\s*(.+)$/);
+    // 跳过包含数字的行（可能是序号）
+    if (/^\d/.test(line)) continue;
 
-    let match = spaceMatch || separatorMatch;
+    // 尝试匹配简化格式：单词 + 任意分隔符 + 中文词义
+    // 支持的分隔符：空格、制表符、-、：、: 、、、. ，，
+    const match = line.match(/^([a-zA-Z]+)[\s\t\-：:：、.,，]+([\u4e00-\u9fa5\s\w\p{P}]+)$/u);
 
     if (match) {
       const [, word, definition] = match;
@@ -76,9 +80,37 @@ export function extractWordsFromText(text: string): WordData[] {
         words.push({
           word: pureWordMatch[1].toLowerCase(),
         });
+      } else {
+        // 尝试提取行首的第一个英文单词
+        const firstWordMatch = line.match(/^([a-zA-Z]+)/);
+        if (firstWordMatch && firstWordMatch[1].length > 1) {
+          // 检查行中是否有中文
+          const hasChinese = /[\u4e00-\u9fa5]/.test(line);
+          if (hasChinese) {
+            // 提取中文部分作为词义
+            const chinesePart = line.substring(firstWordMatch[0].length).replace(/^[^\u4e00-\u9fa5]+/, '').trim();
+            if (chinesePart.length > 0) {
+              words.push({
+                word: firstWordMatch[1].toLowerCase(),
+                definition: chinesePart,
+              });
+            }
+          } else {
+            // 没有中文，只保存单词
+            words.push({
+              word: firstWordMatch[1].toLowerCase(),
+            });
+          }
+        }
       }
     }
   }
+
+  console.log('[wordFileProcessor] 提取结果:', {
+    总行数: lines.length,
+    提取单词数: words.length,
+    前5个单词: words.slice(0, 5),
+  });
 
   return words;
 }
