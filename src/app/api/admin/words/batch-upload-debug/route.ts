@@ -65,13 +65,13 @@ export async function POST(request: NextRequest) {
       .from(words)
       .where(or(...conditions));
 
-    console.log('[批量上传调试] 已存在单词数:', existingWordsResult.rows.length);
-    if (existingWordsResult.rows.length > 0) {
-      console.log('[批量上传调试] 已存在单词示例:', existingWordsResult.rows.slice(0, 3).map((w: any) => ({ word: w.word, id: w.id })));
+    console.log('[批量上传调试] 已存在单词数:', existingWordsResult.length);
+    if (existingWordsResult.length > 0) {
+      console.log('[批量上传调试] 已存在单词示例:', existingWordsResult.slice(0, 3).map((w: any) => ({ word: w.word, id: w.id })));
     }
 
     const existingWordsMap = new Map(
-      existingWordsResult.rows.map((w: any) => [w.word.toLowerCase(), w])
+      existingWordsResult.map((w: any) => [w.word.toLowerCase(), w])
     );
 
     // 批量插入新单词
