@@ -2,6 +2,7 @@
  * 获取当前用户信息（在 API Route 中使用）
  */
 
+import { NextRequest } from 'next/server';
 import { verifyAuthToken } from './auth';
 
 export function getCurrentUserFromRequest(request: NextRequest): { userId: string; role: string } | null {
@@ -19,4 +20,19 @@ export function getCurrentUserFromRequest(request: NextRequest): { userId: strin
   }
 }
 
-import { NextRequest } from 'next/server';
+/**
+ * 验证管理员权限（在 API Route 中使用）
+ */
+export function verifyAdmin(request: NextRequest): { success: boolean; error?: string } {
+  const user = getCurrentUserFromRequest(request);
+
+  if (!user) {
+    return { success: false, error: '未登录' };
+  }
+
+  if (user.role !== 'admin') {
+    return { success: false, error: '权限不足' };
+  }
+
+  return { success: true };
+}
