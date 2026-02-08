@@ -95,11 +95,22 @@ export async function parseWordsWithAI(
   options: {
     includeExamples?: boolean;
     maxTokens?: number;
+    timeout?: number;  // 添加超时参数
   } = {}
 ): Promise<{ success: boolean; words: ParsedWord[]; error?: string }> {
-  const { includeExamples = false, maxTokens = 4000 } = options;
+  const {
+    includeExamples = false,
+    maxTokens = 4000,
+    timeout = 25000  // 默认 25 秒超时
+  } = options;
 
   console.log('[AI] 开始解析单词，文本长度:', text.length);
+
+  // 如果文本太长，截取前 10000 个字符
+  const truncatedText = text.length > 10000 ? text.substring(0, 10000) : text;
+  if (truncatedText.length < text.length) {
+    console.log('[AI] 文本过长，已截取到前 10000 个字符');
+  }
 
   // 获取 AI 配置
   const provider = await getActiveAIProvider();
@@ -206,14 +217,27 @@ export async function parseWordsWithAI(
         model: provider.model_name,
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: `请解析以下文本中的单词：\n\n${text}` }
+          { role: 'user', content: `请解析以下文本中的单词：\n\n${truncatedText}` }
         ],
         max_tokens: maxTokens,
         temperature: 0.3,
       };
     }
 
-    console.log('[AI] 发送请求到:', apiConfig.url);
+    // 也要更新 Gemini 的文本
+    if (provider.provider_name === 'gemini') {
+      payload.contents[1].parts[0].text = `\n\n要解析的文本：\n${truncatedText}`;
+    } else if (provider.provider_name === 'claude') {
+      payload.messages[0].content = `请解析以下文本中的单词：\n\n${truncatedText}`;
+    } else if (provider.provider_name === 'minimax') {
+      payload.messages[0].text = `${systemPrompt}\n\n要解析的文本：\n${truncatedText}`;
+    }
+
+    // 创建超时控制器
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+    console.log('[AI] 发送请求到:', apiConfig.url, '超时设置:', timeout, 'ms');
     const startTime = Date.now();
 
     const response = await fetch(apiConfig.url, {
@@ -222,8 +246,11 @@ export async function parseWordsWithAI(
         'Content-Type': 'application/json',
         ...apiConfig.headers(provider.api_key)
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
+      signal: controller.signal  // 添加超时信号
     });
+
+    clearTimeout(timeoutId);  // 清除超时定时器
 
     const duration = Date.now() - startTime;
     console.log('[AI] API 响应时间:', duration, 'ms');
@@ -334,6 +361,18 @@ export async function parseWordsWithAI(
 
   } catch (error) {
     console.error('[AI] 解析过程出错:', error);
+
+    // 检查是否是超时错误
+    if (error instanceof Error) {
+      if (error.name === 'AbortError' || error.message.includes('abort')) {
+        return {
+          success: false,
+          words: [],
+          error: 'AI 调用超时，请尝试使用更快的 AI 服务商或减少文本长度'
+        };
+      }
+    }
+
     return {
       success: false,
       words: [],

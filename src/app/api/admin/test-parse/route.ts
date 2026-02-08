@@ -71,6 +71,8 @@ export async function POST(request: NextRequest) {
 
       const aiResult = await parseWordsWithAI(parseResult.text, {
         includeExamples: true,
+        maxTokens: 2000,  // 减少到 2000 以加快速度
+        timeout: 20000,   // 设置 20 秒超时
       });
 
       console.log('[测试解析] AI 解析结果:', aiResult.success, aiResult.words.length, '个单词');
