@@ -15,7 +15,7 @@ import { parseWordDocument } from '@/utils/wordParser';
 import { parseFile, getSupportedFormats, isFormatSupported } from '@/utils/fileParser';
 import { getDb } from '@/utils/db';
 import { words } from '@/storage/database/shared/schema';
-import { eq, sql } from 'drizzle-orm';
+import { eq, sql, inArray } from 'drizzle-orm';
 import { checkPermission } from '@/utils/auth';
 
 export async function POST(request: NextRequest) {
@@ -195,10 +195,8 @@ export async function POST(request: NextRequest) {
       const db = await getDb();
       const insertedWords = [];
 
-      // 批量检查已存在的单词（使用 inArray 替代 ANY 操作符）
+      // 批量检查已存在的单词
       const allWords = parsedWords.map(w => w.word);
-      const { inArray } = await import('drizzle-orm');
-
       const existingWordsResult = await db
         .select()
         .from(words)
