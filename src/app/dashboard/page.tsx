@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { authFetch } from '@/utils/authFetch';
 import {
   BookMarked,
   GraduationCap,
@@ -53,7 +54,7 @@ export default function DashboardPage() {
   const loadUserData = async () => {
     try {
       // 加载用户信息
-      const userRes = await fetch('/api/auth/me');
+      const userRes = await authFetch('/api/auth/me');
       const userData = await userRes.json();
 
       if (!userData.success) {
@@ -65,7 +66,7 @@ export default function DashboardPage() {
       setUserInfo(userData.data);
 
       // 加载统计数据
-      const statsRes = await fetch('/api/user/stats');
+      const statsRes = await authFetch('/api/user/stats');
       const statsData = await statsRes.json();
 
       if (statsData.success) {

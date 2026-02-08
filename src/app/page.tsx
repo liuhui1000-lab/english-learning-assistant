@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
+import { authFetch } from '@/utils/authFetch';
 
 /**
  * 首页 - 根据登录状态重定向
@@ -15,7 +16,7 @@ export default function Home() {
   useEffect(() => {
     const checkAuthAndRedirect = async () => {
       try {
-        const response = await fetch('/api/auth/me');
+        const response = await authFetch('/api/auth/me');
         const data = await response.json();
 
         if (data.success && data.data) {

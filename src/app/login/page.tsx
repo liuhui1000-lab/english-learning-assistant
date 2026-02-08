@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
+import { authFetch } from '@/utils/authFetch';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -17,7 +18,7 @@ export default function LoginPage() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await fetch('/api/auth/me');
+        const response = await authFetch('/api/auth/me');
         const data = await response.json();
 
         if (data.success && data.data) {
@@ -51,7 +52,11 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (data.success) {
-        // 登录成功，通知 Header 刷新用户信息
+        // 登录成功，保存 token 到 localStorage（备用方案）
+        if (data.data.token) {
+          localStorage.setItem('auth_token', data.data.token);
+        }
+        // 通知 Header 刷新用户信息
         window.dispatchEvent(new CustomEvent('auth-changed', { detail: { loggedIn: true } }));
         // 使用 window.location.href 强制重新加载，确保 Cookie 被正确处理
         window.location.href = '/dashboard';

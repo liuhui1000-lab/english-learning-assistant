@@ -12,8 +12,18 @@ import { getCurrentUserFromRequest } from '@/utils/authHelper';
  */
 export async function GET(request: NextRequest) {
   try {
-    // 获取当前用户
-    const currentUser = getCurrentUserFromRequest(request);
+    // 获取当前用户 - 支持两种方式：Cookie 或 Authorization 头
+    let currentUser = getCurrentUserFromRequest(request);
+    
+    // 如果 Cookie 中没有 token，尝试从 Authorization 头获取
+    if (!currentUser) {
+      const authHeader = request.headers.get('authorization');
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.substring(7);
+        const { verifyAuthToken } = await import('@/utils/auth');
+        currentUser = verifyAuthToken(token);
+      }
+    }
 
     if (!currentUser) {
       return NextResponse.json(

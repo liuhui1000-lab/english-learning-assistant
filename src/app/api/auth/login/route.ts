@@ -112,9 +112,20 @@ export async function POST(request: NextRequest) {
     const cookie = setAuthCookie(token);
 
     // 创建 Set-Cookie 头的值
-    const cookieHeaderValue = `${cookie.name}=${cookie.value}; Path=${cookie.attributes.path}; HttpOnly; SameSite=${cookie.attributes.sameSite}`;
+    const expiresDate = cookie.attributes.expires as Date;
+    const expiresStr = expiresDate.toUTCString();
+    
+    // 构建 Set-Cookie 头
+    const setCookieValue = `${cookie.name}=${cookie.value}; Path=${cookie.attributes.path}; HttpOnly; SameSite=${cookie.attributes.sameSite}; Expires=${expiresStr}`;
 
-    // 返回用户信息
+    console.log('登录成功，设置 Cookie:', {
+      name: cookie.name,
+      valueLength: cookie.value.length,
+      expires: expiresStr,
+      path: cookie.attributes.path,
+    });
+
+    // 返回用户信息（包含 token，用于前端备用）
     const response = NextResponse.json({
       success: true,
       data: {
@@ -124,18 +135,13 @@ export async function POST(request: NextRequest) {
         fullName: user.full_name,
         role: user.role,
         lastLoginAt: new Date().toISOString(),
+        token, // 返回 token，前端可以存储在 localStorage 中
       },
       message: '登录成功',
     });
 
     // 在响应中设置cookie - 使用 Set-Cookie 头
-    if (cookie.attributes.expires) {
-      const expiresDate = cookie.attributes.expires as Date;
-      const expiresStr = expiresDate.toUTCString();
-      response.headers.set('Set-Cookie', `${cookie.name}=${cookie.value}; Path=${cookie.attributes.path}; HttpOnly; SameSite=${cookie.attributes.sameSite}; Expires=${expiresStr}`);
-    } else {
-      response.headers.set('Set-Cookie', cookieHeaderValue);
-    }
+    response.headers.append('Set-Cookie', setCookieValue);
 
     return response;
   } catch (error) {
