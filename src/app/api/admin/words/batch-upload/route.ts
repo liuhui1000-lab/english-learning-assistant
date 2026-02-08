@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/utils/db';
 import { words } from '@/storage/database/shared/schema';
-import { eq, sql } from 'drizzle-orm';
+import { eq, sql, inArray } from 'drizzle-orm';
 import { checkPermission } from '@/utils/auth';
 
 export async function POST(request: NextRequest) {
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     const existingWordsResult = await db
       .select()
       .from(words)
-      .where(sql`${words.word} = ANY(${allWords})`);
+      .where(inArray(words.word, allWords));
 
     const existingWordsMap = new Map(
       existingWordsResult.map(w => [w.word, w])
