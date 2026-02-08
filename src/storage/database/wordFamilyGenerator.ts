@@ -10,7 +10,7 @@ import {
   wordTransformations,
   type WordFamily,
 } from './shared/schema';
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 
 export interface GeneratedWordFamily {
   baseWord: string;
@@ -57,8 +57,7 @@ export async function generateWordFamiliesFromTransformations(): Promise<Generat
       .select()
       .from(words)
       .where(
-        (params: any) =>
-          relatedWords.includes(params.words.word.toLowerCase())
+        inArray(words.word, relatedWords.map(w => w.toLowerCase()))
       );
 
     // 确定主要年级（取最早出现的年级）
@@ -134,7 +133,7 @@ export async function createWordFamilyFromTransformation(
     const wordRecords = await db
       .select()
       .from(words)
-      .where((params: any) => params.words.word === word.toLowerCase());
+      .where(eq(words.word, word.toLowerCase()));
 
     for (const wordRecord of wordRecords) {
       await db
@@ -232,8 +231,7 @@ export async function getRecommendedFamiliesForUser(
     .select()
     .from(wordFamilies)
     .where(
-      (params: any) =>
-        allowedGrades.includes(params.wordFamilies.grade || '8年级')
+      inArray(wordFamilies.grade, allowedGrades)
     );
 
   // 为每个词族获取详情，确保包含该年级的单词

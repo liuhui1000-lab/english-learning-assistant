@@ -169,7 +169,7 @@ export async function getUserLearningStats(userId: string, userGradeSemester: st
 
   // 获取到复习时间的词族
   const now = new Date().toISOString();
-  const dueProgress = allProgress.filter(p => p.nextReviewDate <= now);
+  const dueProgress = allProgress.filter(p => (p.nextReviewAt || '') <= now);
 
   // 统计单词
   let totalWords = 0;
@@ -201,12 +201,12 @@ export async function getUserLearningStats(userId: string, userGradeSemester: st
 
   // 计算平均掌握度
   const avgMasteryLevel = allProgress.length > 0
-    ? allProgress.reduce((sum, p) => sum + p.masteryLevel, 0) / allProgress.length
+    ? allProgress.reduce((sum, p) => sum + (p.masteryLevel || 0), 0) / allProgress.length
     : 0;
 
   return {
     totalFamilies: allFamilies.length,
-    completedFamilies: allProgress.filter(p => p.masteryLevel >= 5).length,
+    completedFamilies: allProgress.filter(p => (p.masteryLevel || 0) >= 5).length,
     dueFamilies: dueProgress.length,
     totalWords,
     currentSemesterWords,

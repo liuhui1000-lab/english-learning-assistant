@@ -12,7 +12,6 @@ import {
   userWordFamilyProgress,
   type WordFamily,
   type Word,
-  type WordTransformation,
   type Collocation,
 } from './shared/schema';
 import { eq, and, desc, sql } from 'drizzle-orm';
@@ -271,22 +270,21 @@ export class WordFamilyManager {
       await db
         .update(userWordFamilyProgress)
         .set({
-          reviewCount: existing.reviewCount + 1,
-          masteryLevel: Math.min(existing.masteryLevel + 1, 5),
-          nextReviewDate,
-          lastReviewedAt: new Date().toISOString(),
+          reviewCount: (existing[0].reviewCount || 0) + 1,
+          masteryLevel: Math.min((existing[0].masteryLevel || 0) + 1, 5),
+          nextReviewAt: nextReviewDate.toISOString(),
+          lastReviewAt: new Date().toISOString(),
         })
-        .where(eq(userWordFamilyProgress.id, existing.id));
+        .where(eq(userWordFamilyProgress.id, existing[0].id));
     } else {
       // 创建新记录
       await db.insert(userWordFamilyProgress).values({
-        id: crypto.randomUUID(),
         userId,
-        wordFamilyId: familyId,
+        wordFamilyId,
         reviewCount: 1,
         masteryLevel: 1,
-        nextReviewDate,
-        lastReviewedAt: new Date().toISOString(),
+        nextReviewAt: nextReviewDate.toISOString(),
+        lastReviewAt: new Date().toISOString(),
       });
     }
   }
@@ -304,7 +302,7 @@ export class WordFamilyManager {
       .where(
         and(
           eq(userWordFamilyProgress.userId, userId),
-          sql`${userWordFamilyProgress.nextReviewDate} <= ${now}`
+          sql`${userWordFamilyProgress.nextReviewAt} <= ${now}`
         )
       );
 

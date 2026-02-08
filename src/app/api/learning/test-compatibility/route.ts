@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
       let reviewWords = 0;
 
       families.forEach(family => {
-        family.words.forEach(word => {
+        family.words.forEach((word: any) => {
           const wordGrade = word.grade || '8年级';
           const wordSemester = word.semester || '下学期';
           const wordGradeSemester = combineGradeSemester(wordGrade, wordSemester);
