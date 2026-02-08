@@ -16,6 +16,8 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Upload,
   CheckCircle,
@@ -29,7 +31,22 @@ import {
   FileSpreadsheet,
   RefreshCw,
   Eye,
+  AlertTriangle,
 } from 'lucide-react';
+
+interface BatchUploadProgress {
+  totalWords: number;
+  processedWords: number;
+  currentBatch: number;
+  totalBatches: number;
+  percentage: number;
+  stage: string;
+  newWords: number;
+  updatedWords: number;
+  failedWords: number;
+  status: 'parsing' | 'uploading' | 'completed' | 'error';
+  error?: string;
+}
 
 interface UploadResult {
   version: string;
@@ -66,10 +83,12 @@ export default function SmartImportPage() {
   const [file, setFile] = useState<File | null>(null);
   const [description, setDescription] = useState('');
   const [mergeStrategy, setMergeStrategy] = useState<MergeStrategyType>('smart_merge');
+  const [useBatchMode, setUseBatchMode] = useState(false); // 是否使用分批模式
   const [previewText, setPreviewText] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
+  const [batchProgress, setBatchProgress] = useState<BatchUploadProgress | null>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -109,6 +128,13 @@ export default function SmartImportPage() {
       return;
     }
 
+    // 大文件模式（仅支持单词上传）
+    if (uploadType === 'words' && useBatchMode) {
+      await handleBatchUpload();
+      return;
+    }
+
+    // 原有的上传逻辑
     setIsUploading(true);
     setUploadProgress(0);
     setUploadResult(null);
@@ -160,6 +186,44 @@ export default function SmartImportPage() {
       alert('上传失败');
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  /**
+   * 大文件模式：前端分批上传
+   */
+  const handleBatchUpload = async () => {
+    if (!file) {
+      alert('请选择文件');
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadProgress(0);
+    setUploadResult(null);
+    setBatchProgress(null);
+
+    try {
+      // 动态导入wordFileProcessor
+      const { processWordFile } = await import('@/utils/wordFileProcessor');
+
+      // 处理文件
+      const result = await processWordFile(file, 100, (progress) => {
+        setBatchProgress(progress);
+        setUploadProgress(progress.percentage);
+      });
+
+      if (result.success) {
+        alert(`上传成功！\n总共 ${result.totalWords} 个单词\n新增 ${result.newWords} 个\n更新 ${result.updatedWords} 个\n失败 ${result.failedWords} 个`);
+      } else {
+        alert('上传失败');
+      }
+    } catch (error) {
+      console.error('批量上传失败:', error);
+      alert(`上传失败：${error instanceof Error ? error.message : '未知错误'}`);
+    } finally {
+      setIsUploading(false);
+      setBatchProgress(null);
     }
   };
 
@@ -244,6 +308,44 @@ export default function SmartImportPage() {
                   支持的格式：TXT, MD, JSON, CSV, DOCX, PDF
                 </p>
               </div>
+
+              {/* 大文件模式开关 */}
+              {uploadType === 'words' && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>大文件模式</Label>
+                      <p className="text-sm text-muted-foreground">
+                        适用于超过 10MB 的文件，在前端分批处理
+                      </p>
+                    </div>
+                    <Switch
+                      checked={useBatchMode}
+                      onCheckedChange={setUseBatchMode}
+                      disabled={isUploading}
+                    />
+                  </div>
+
+                  {/* 文件大小提示 */}
+                  {file && file.size > 10 * 1024 * 1024 && !useBatchMode && (
+                    <Alert variant="destructive">
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertDescription>
+                        文件大小超过 10MB，建议开启"大文件模式"以避免超时错误。
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
+                  {useBatchMode && (
+                    <Alert>
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertDescription>
+                        大文件模式将在浏览器端解析文件并分批上传，不受服务器超时限制。
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </div>
+              )}
 
               {/* 描述 */}
               <div className="space-y-2">
@@ -342,10 +444,39 @@ export default function SmartImportPage() {
               {isUploading && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
-                    <span>处理中...</span>
+                    <span>{batchProgress ? batchProgress.stage : '处理中...'}</span>
                     <span>{uploadProgress}%</span>
                   </div>
                   <Progress value={uploadProgress} />
+                  {/* 批量上传详细进度 */}
+                  {batchProgress && (
+                    <div className="text-xs text-muted-foreground space-y-1 bg-gray-50 dark:bg-gray-900 p-2 rounded">
+                      <div className="flex justify-between">
+                        <span>总单词数：</span>
+                        <span className="font-medium">{batchProgress.totalWords}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>已处理：</span>
+                        <span className="font-medium">{batchProgress.processedWords} / {batchProgress.totalWords}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>当前批次：</span>
+                        <span className="font-medium">{batchProgress.currentBatch} / {batchProgress.totalBatches}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>新增：</span>
+                        <span className="font-medium text-green-600">{batchProgress.newWords}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>更新：</span>
+                        <span className="font-medium text-blue-600">{batchProgress.updatedWords}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>失败：</span>
+                        <span className="font-medium text-red-600">{batchProgress.failedWords}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
