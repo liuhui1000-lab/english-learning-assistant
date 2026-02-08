@@ -246,7 +246,8 @@ function tryParseListFormat(lines: string[]): ParsedWord[] {
 }
 
 /**
- * 使用字典API补充单词信息
+ * 使用字典API补充单词信息（优化版）
+ * 跳过已经有词义的单词，只补充必要信息
  */
 async function enrichWords(
   words: ParsedWord[],
@@ -261,10 +262,24 @@ async function enrichWords(
     fetchPartOfSpeech = true,
     fetchExample = false,
   } = options;
-  
+
+  console.log('[wordParser] 开始补充单词信息，总单词数:', words.length);
+
+  // 如果单词数量过多，跳过API调用，直接返回
+  if (words.length > 200) {
+    console.warn('[wordParser] 单词数量过多（>200），跳过字典API调用');
+    return words;
+  }
+
   const enriched: ParsedWord[] = [];
-  
+
   for (const word of words) {
+    // 如果单词已经有词义，说明是简化格式，直接使用（不调用API）
+    if (word.definition && word.definition.trim()) {
+      enriched.push(word);
+      continue;
+    }
+
     // 如果单词已经有完整信息，直接使用
     if (
       word.pronunciation &&
@@ -274,30 +289,35 @@ async function enrichWords(
       enriched.push(word);
       continue;
     }
-    
-    // 查询字典API
-    const dictData = await fetchDictionaryWithCache(word.word);
-    
-    if (dictData) {
-      // 补充发音
-      if (fetchPronunciation && !word.pronunciation && dictData.pronunciation) {
-        word.pronunciation = dictData.pronunciation;
+
+    // 只对没有词义的单词查询字典API
+    try {
+      const dictData = await fetchDictionaryWithCache(word.word);
+
+      if (dictData) {
+        // 补充发音
+        if (fetchPronunciation && !word.pronunciation && dictData.pronunciation) {
+          word.pronunciation = dictData.pronunciation;
+        }
+
+        // 补充词性
+        if (fetchPartOfSpeech && !word.partOfSpeech && dictData.partOfSpeech) {
+          word.partOfSpeech = dictData.partOfSpeech;
+        }
+
+        // 补充例句（如果用户没有提供，且要求获取例句）
+        if (fetchExample && !word.example && dictData.example) {
+          word.example = dictData.example;
+        }
       }
-      
-      // 补充词性
-      if (fetchPartOfSpeech && !word.partOfSpeech && dictData.partOfSpeech) {
-        word.partOfSpeech = dictData.partOfSpeech;
-      }
-      
-      // 补充例句（如果用户没有提供，且要求获取例句）
-      if (fetchExample && !word.example && dictData.example) {
-        word.example = dictData.example;
-      }
+    } catch (error) {
+      console.error('[wordParser] 查询字典失败:', word.word, error);
     }
-    
+
     enriched.push(word);
   }
-  
+
+  console.log('[wordParser] 补充单词信息完成');
   return enriched;
 }
 

@@ -59,15 +59,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 创建超时控制 Promise（9秒，留1秒给 Netlify）
+    // 创建超时控制 Promise（8秒，留2秒给 Netlify）
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('请求处理超时，请尝试上传较小的文件')), 9000);
+      setTimeout(() => reject(new Error('请求处理超时，请使用"大文件模式"上传')), 8000);
     });
 
     // 创建处理 Promise
     const processPromise = (async () => {
+      const startTime = Date.now();
+      console.log(`[单词上传] 开始处理文件: ${file.name}, 大小: ${file.size} bytes`);
+
       // 解析文件内容
-      console.log(`[单词上传] 开始解析文件: ${file.name}`);
+      console.log(`[单词上传] [${Date.now() - startTime}ms] 开始解析文件`);
       let text = '';
 
       try {
@@ -77,6 +80,7 @@ export async function POST(request: NextRequest) {
         if (parseResult.warnings.length > 0) {
           console.warn('[单词上传] 解析警告:', parseResult.warnings);
         }
+        console.log(`[单词上传] [${Date.now() - startTime}ms] 文件解析完成`);
       } catch (error) {
         throw new Error(error instanceof Error ? error.message : '文件解析失败');
       }
@@ -86,14 +90,14 @@ export async function POST(request: NextRequest) {
       }
 
       // 首先尝试规则解析
-      console.log('[单词上传] 尝试规则解析');
+      console.log(`[单词上传] [${Date.now() - startTime}ms] 尝试规则解析`);
       let parsedWords = await parseWordDocument(text, {
         fetchPronunciation: true,
         fetchPartOfSpeech: true,
         fetchExample: includeExamples,
       });
 
-      console.log('[单词上传] 规则解析结果:', {
+      console.log(`[单词上传] [${Date.now() - startTime}ms] 规则解析完成`, {
         success: parsedWords.length > 0,
         wordCount: parsedWords.length,
         firstWord: parsedWords.length > 0 ? parsedWords[0] : null,
@@ -184,9 +188,10 @@ export async function POST(request: NextRequest) {
         throw new Error('未能从文档中解析出单词');
       }
 
-      console.log(`[单词上传] 成功解析 ${parsedWords.length} 个单词`);
+      console.log(`[单词上传] [${Date.now() - startTime}ms] 成功解析 ${parsedWords.length} 个单词`);
 
       // 保存到数据库（使用批量操作）
+      console.log(`[单词上传] [${Date.now() - startTime}ms] 开始数据库操作`);
       const db = await getDb();
       const insertedWords = [];
 
@@ -197,12 +202,18 @@ export async function POST(request: NextRequest) {
         .from(words)
         .where(sql`${words.word} = ANY(${allWords})`);
 
+      console.log(`[单词上传] [${Date.now() - startTime}ms] 查询已存在单词完成`, {
+        total: allWords.length,
+        existing: existingWordsResult.length,
+      });
+
       const existingWordsMap = new Map(
         existingWordsResult.map(w => [w.word, w])
       );
 
       // 批量插入新单词
       const newWords = parsedWords.filter(w => !existingWordsMap.has(w.word));
+      console.log(`[单词上传] [${Date.now() - startTime}ms] 准备插入新单词`, { count: newWords.length });
       if (newWords.length > 0) {
         const insertData = newWords.map(wordData => ({
           word: wordData.word,
@@ -219,10 +230,12 @@ export async function POST(request: NextRequest) {
           .returning();
 
         insertedWords.push(...inserted);
+        console.log(`[单词上传] [${Date.now() - startTime}ms] 插入新单词完成`, { count: inserted.length });
       }
 
       // 批量更新已存在的单词
       const wordsToUpdate = parsedWords.filter(w => existingWordsMap.has(w.word));
+      console.log(`[单词上传] [${Date.now() - startTime}ms] 准备更新已存在单词`, { count: wordsToUpdate.length });
       for (const wordData of wordsToUpdate) {
         const existingWord = existingWordsMap.get(wordData.word)!;
         const updated = await db
@@ -238,6 +251,13 @@ export async function POST(request: NextRequest) {
 
         insertedWords.push(updated[0]);
       }
+
+      const totalTime = Date.now() - startTime;
+      console.log(`[单词上传] 处理完成，总耗时: ${totalTime}ms`, {
+        totalWords: parsedWords.length,
+        newWords: newWords.length,
+        updatedWords: wordsToUpdate.length,
+      });
 
       return {
         success: true,
@@ -266,12 +286,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: '请求处理超时',
-          details: 'Netlify 免费版有 10 秒超时限制。请尝试：\n1. 上传较小的文件（< 500KB）\n2. 使用简单的单词格式（单词 + 词义）\n3. 不勾选"包含例句"选项',
+          details: '处理时间过长。请使用"大文件模式"上传（在智能导入页面开启"大文件模式"开关）。\n\n大文件模式会分批处理，完全不受超时限制。',
           suggestions: [
-            '上传较小的文件',
+            '使用"大文件模式"上传（推荐）',
+            '上传较小的文件（< 200 个单词）',
             '使用简单的单词格式（如：adventure - 冒险）',
             '不勾选"包含例句"选项',
-            '升级到 Netlify Pro 计划以获得更长的超时时间'
           ]
         },
         { status: 504 }
