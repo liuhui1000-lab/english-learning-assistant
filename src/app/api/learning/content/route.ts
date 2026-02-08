@@ -1,17 +1,18 @@
 /**
  * 学习内容适配 API
- * GET /api/learning/content - 获取用户可访问的学习内容（向下兼容）
- * GET /api/learning/stats - 获取用户学习统计
- * GET /api/learning/plan - 生成学习计划
+ * GET /api/learning/content - 获取用户可访问的学习内容（向下兼容，支持学期）
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { adaptWordFamiliesForUser, getUserLearningStats, generateLearningPlan } from '@/storage/database/learningContentAdapter';
+import { adaptWordFamiliesForUser } from '@/storage/database/learningContentAdapter';
 import { getCurrentUserFromRequest } from '@/utils/authHelper';
-import { z } from 'zod';
 
 /**
- * GET /api/learning/content - 获取用户可访问的学习内容（向下兼容）
+ * GET /api/learning/content - 获取用户可访问的学习内容（向下兼容，支持学期）
+ *
+ * 查询参数：
+ * - gradeSemester: 年级学期组合，如 "8年级上学期"、"8年级下学期"
+ * - limit: 返回的词族数量，默认 50
  */
 export async function GET(request: NextRequest) {
   try {
@@ -26,25 +27,25 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '50');
 
-    // 从用户信息中获取年级（如果没有提供，默认8年级）
-    // 注意：这里需要用户表有 grade 字段，或者从其他地方获取
-    // 暂时使用参数方式
-    const grade = searchParams.get('grade') || '8年级';
+    // 从查询参数获取年级学期（如果没有提供，默认8年级下学期）
+    const gradeSemester = searchParams.get('gradeSemester') || '8年级下学期';
 
-    const families = await adaptWordFamiliesForUser(grade, limit);
+    const families = await adaptWordFamiliesForUser(gradeSemester, limit);
+
+    // 获取可访问的年级学期
+    const allGradeSemesters = ['6年级上学期', '6年级下学期', '7年级上学期', '7年级下学期', '8年级上学期', '8年级下学期', '9年级上学期', '9年级下学期'];
+    const userIndex = allGradeSemesters.indexOf(gradeSemester);
+    const accessibleGradeSemesters = allGradeSemesters.filter((_, index) => index <= userIndex);
 
     return NextResponse.json({
       success: true,
       data: {
-        userGrade: grade,
-        accessibleGrades: ['6年级', '7年级', '8年级', '9年级'].filter(g =>
-          ['6年级', '7年级', '8年级', '9年级'].indexOf(g) <=
-          ['6年级', '7年级', '8年级', '9年级'].indexOf(grade)
-        ),
+        userGradeSemester: gradeSemester,
+        accessibleGradeSemesters,
         count: families.length,
         families,
       },
-      message: `为 ${grade} 学生推荐 ${families.length} 个词族`,
+      message: `为 ${gradeSemester} 学生推荐 ${families.length} 个词族`,
     });
   } catch (error) {
     console.error('[获取学习内容] 错误:', error);

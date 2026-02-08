@@ -1,6 +1,6 @@
 /**
  * 学习统计 API
- * GET /api/learning/stats - 获取用户学习统计（向下兼容）
+ * GET /api/learning/stats - 获取用户学习统计（向下兼容，支持学期）
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -8,7 +8,10 @@ import { getUserLearningStats } from '@/storage/database/learningContentAdapter'
 import { getCurrentUserFromRequest } from '@/utils/authHelper';
 
 /**
- * GET /api/learning/stats - 获取用户学习统计
+ * GET /api/learning/stats - 获取用户学习统计（向下兼容，支持学期）
+ *
+ * 查询参数：
+ * - gradeSemester: 年级学期组合，如 "8年级上学期"、"8年级下学期"
  */
 export async function GET(request: NextRequest) {
   try {
@@ -21,9 +24,9 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const grade = searchParams.get('grade') || '8年级';
+    const gradeSemester = searchParams.get('gradeSemester') || '8年级下学期';
 
-    const stats = await getUserLearningStats(user.id, grade);
+    const stats = await getUserLearningStats(user.id, gradeSemester);
 
     return NextResponse.json({
       success: true,

@@ -10,13 +10,16 @@ export const wordFamilies = pgTable("word_families", {
     baseWord: varchar("base_word", { length: 100 }).notNull(),
     familyName: varchar("family_name", { length: 100 }).notNull(),
     grade: varchar({ length: 20 }).default('8年级'), // '6年级' | '7年级' | '8年级' | '9年级'
+    semester: varchar({ length: 10 }).default('下学期'), // '上学期' | '下学期'
     sourceType: varchar("source_type", { length: 20 }).default('list').notNull(), // 'list' | 'exam' | 'mistake'
-    sourceInfo: varchar("source_info", { length: 200 }), // '6年级清单' | '2025年模拟卷A' | '错题收集'
+    sourceInfo: varchar("source_info", { length: 200 }), // '6年级上学期清单' | '2025年模拟卷A' | '错题收集'
     difficulty: integer().default(1),
     createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
     index("word_families_base_word_idx").using("btree", table.baseWord.asc().nullsLast().op("text_ops")),
     index("word_families_grade_idx").using("btree", table.grade.asc().nullsLast().op("text_ops")),
+    index("word_families_semester_idx").using("btree", table.semester.asc().nullsLast().op("text_ops")),
+    index("word_families_grade_semester_idx").using("btree", sql`${table.grade}, ${table.semester}`),
     index("word_families_source_type_idx").using("btree", table.sourceType.asc().nullsLast().op("text_ops")),
 ])
 
@@ -112,12 +115,15 @@ export const words = pgTable("words", {
         example: text(),
         exampleTranslation: text("example_translation"),
         grade: varchar({ length: 20 }).default('8年级'), // '6年级' | '7年级' | '8年级' | '9年级'
+        semester: varchar({ length: 10 }).default('下学期'), // '上学期' | '下学期'
         difficulty: integer().default(1),
         createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
         index("words_word_idx").using("btree", table.word.asc().nullsLast().op("text_ops")),
         index("words_word_family_id_idx").using("btree", table.wordFamilyId.asc().nullsLast().op("text_ops")),
         index("words_grade_idx").using("btree", table.grade.asc().nullsLast().op("text_ops")),
+        index("words_semester_idx").using("btree", table.semester.asc().nullsLast().op("text_ops")),
+        index("words_grade_semester_idx").using("btree", sql`${table.grade}, ${table.semester}`),
         unique("words_word_unique").on(table.word),
         foreignKey({
                         columns: [table.wordFamilyId],
