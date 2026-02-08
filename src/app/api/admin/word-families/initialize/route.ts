@@ -70,7 +70,10 @@ export async function POST(request: NextRequest) {
       }>,
     };
 
-    for (const [baseWord, match] of familyMap.entries()) {
+    // 使用 Array.from 解决 Map 迭代器兼容性问题
+    const familyEntries = Array.from(familyMap.entries());
+
+    for (const [baseWord, match] of familyEntries) {
       try {
         // 检查词族是否已存在
         const existingFamily = await manager.getWordFamilyByBaseWord(baseWord);
