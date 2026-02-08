@@ -111,6 +111,9 @@ export async function POST(request: NextRequest) {
     // 设置cookie
     const cookie = setAuthCookie(token);
 
+    // 创建 Set-Cookie 头的值
+    const cookieHeaderValue = `${cookie.name}=${cookie.value}; Path=${cookie.attributes.path}; HttpOnly; SameSite=${cookie.attributes.sameSite}`;
+
     // 返回用户信息
     const response = NextResponse.json({
       success: true,
@@ -125,8 +128,14 @@ export async function POST(request: NextRequest) {
       message: '登录成功',
     });
 
-    // 在响应中设置cookie
-    response.cookies.set(cookie.name, cookie.value, cookie.attributes);
+    // 在响应中设置cookie - 使用 Set-Cookie 头
+    if (cookie.attributes.expires) {
+      const expiresDate = cookie.attributes.expires as Date;
+      const expiresStr = expiresDate.toUTCString();
+      response.headers.set('Set-Cookie', `${cookie.name}=${cookie.value}; Path=${cookie.attributes.path}; HttpOnly; SameSite=${cookie.attributes.sameSite}; Expires=${expiresStr}`);
+    } else {
+      response.headers.set('Set-Cookie', cookieHeaderValue);
+    }
 
     return response;
   } catch (error) {

@@ -53,7 +53,8 @@ export default function LoginPage() {
       if (data.success) {
         // 登录成功，通知 Header 刷新用户信息
         window.dispatchEvent(new CustomEvent('auth-changed', { detail: { loggedIn: true } }));
-        router.push('/dashboard');
+        // 使用 window.location.href 强制重新加载，确保 Cookie 被正确处理
+        window.location.href = '/dashboard';
       } else {
         setError(data.error || '登录失败，请检查用户名和密码');
       }

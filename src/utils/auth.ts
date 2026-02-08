@@ -92,6 +92,10 @@ export function verifyAuthToken(token: string): { userId: string; role: string }
  * 设置认证cookie（返回设置cookie的headers）
  */
 export function setAuthCookie(token: string): { name: string; value: string; attributes: any } {
+  // 计算过期时间（7天后）
+  const expires = new Date();
+  expires.setDate(expires.getDate() + 7);
+  
   return {
     name: 'auth_token',
     value: token,
@@ -99,7 +103,7 @@ export function setAuthCookie(token: string): { name: string; value: string; att
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax' as const,
-      maxAge: 7 * 24 * 60 * 60, // 7天
+      expires, // 使用 expires 而不是 maxAge
       path: '/',
     },
   };
