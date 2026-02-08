@@ -5,9 +5,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/utils/auth';
-import { getDb } from '@/utils/db';
+import { getDb, query } from '@/utils/db';
 import { userWordProgress, grammarMistakes, transformationMistakes } from '@/storage/database/shared/schema';
-import { eq, sql } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
   try {
@@ -21,31 +21,49 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    console.log('[用户统计] 当前用户:', currentUser);
+
+    // 使用原生 SQL 查询（更可靠）
     const db = await getDb();
 
     // 统计单词进度
-    const vocabularyResult = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(userWordProgress)
-      .where(eq(userWordProgress.userId, currentUser.userId));
-
-    const vocabularyCount = vocabularyResult[0]?.count || 0;
+    let vocabularyCount = 0;
+    try {
+      const vocabResult = await query(
+        'SELECT COUNT(*) as count FROM user_word_progress WHERE user_id = $1',
+        [currentUser.userId]
+      );
+      vocabularyCount = parseInt(vocabResult.rows[0]?.count || '0');
+      console.log('[用户统计] 单词进度:', vocabularyCount);
+    } catch (error) {
+      console.error('[用户统计] 查询单词进度失败:', error);
+    }
 
     // 统计语法错题
-    const grammarResult = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(grammarMistakes)
-      .where(eq(grammarMistakes.userId, currentUser.userId));
-
-    const grammarCount = grammarResult[0]?.count || 0;
+    let grammarCount = 0;
+    try {
+      const grammarResult = await query(
+        'SELECT COUNT(*) as count FROM grammar_mistakes WHERE user_id = $1',
+        [currentUser.userId]
+      );
+      grammarCount = parseInt(grammarResult.rows[0]?.count || '0');
+      console.log('[用户统计] 语法错题:', grammarCount);
+    } catch (error) {
+      console.error('[用户统计] 查询语法错题失败:', error);
+    }
 
     // 统计词转错题
-    const transformationResult = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(transformationMistakes)
-      .where(eq(transformationMistakes.userId, currentUser.userId));
-
-    const transformationCount = transformationResult[0]?.count || 0;
+    let transformationCount = 0;
+    try {
+      const transResult = await query(
+        'SELECT COUNT(*) as count FROM transformation_mistakes WHERE user_id = $1',
+        [currentUser.userId]
+      );
+      transformationCount = parseInt(transResult.rows[0]?.count || '0');
+      console.log('[用户统计] 词转错题:', transformationCount);
+    } catch (error) {
+      console.error('[用户统计] 查询词转错题失败:', error);
+    }
 
     // 统计总错题数
     const totalMistakes = grammarCount + transformationCount;
@@ -68,6 +86,7 @@ export async function GET(request: NextRequest) {
       {
         success: false,
         error: error instanceof Error ? error.message : '获取统计数据失败',
+        details: error instanceof Error ? error.stack : undefined,
       },
       { status: 500 }
     );

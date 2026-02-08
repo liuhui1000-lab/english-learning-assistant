@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     }
 
     console.log(`[批量上传] 批次 ${batchNumber}/${totalBatches}，单词数量: ${wordsData.length}`);
-    console.log(`[批量上传] 前3个单词:`, wordsData.slice(0, 3));
+    console.log(`[批量上传] 前3个单词:`, JSON.stringify(wordsData.slice(0, 3), null, 2));
 
     const db = await getDb();
     let newWords = 0;
@@ -49,6 +49,7 @@ export async function POST(request: NextRequest) {
     // 批量检查已存在的单词
     const allWords = wordsData.map((w: any) => w.word);
     console.log(`[批量上传] 查询已存在单词，数量: ${allWords.length}`);
+    console.log(`[批量上传] 单词列表:`, allWords.slice(0, 10));
 
     const existingWordsResult = await db
       .select()
@@ -56,23 +57,30 @@ export async function POST(request: NextRequest) {
       .where(inArray(words.word, allWords));
 
     console.log(`[批量上传] 查询结果: 已存在 ${existingWordsResult.length} 个单词`);
+    if (existingWordsResult.length > 0) {
+      console.log(`[批量上传] 已存在单词示例:`, existingWordsResult.slice(0, 3).map(w => w.word));
+    }
 
     const existingWordsMap = new Map(
-      existingWordsResult.map(w => [w.word, w])
+      existingWordsResult.map(w => [w.word.toLowerCase(), w])
     );
 
-    // 批量插入新单词
-    const newWordsList = wordsData.filter((w: any) => !existingWordsMap.has(w.word));
+    // 批量插入新单词（使用小写比较）
+    const newWordsList = wordsData.filter((w: any) => !existingWordsMap.has(w.word.toLowerCase()));
+    console.log(`[批量上传] 准备插入 ${newWordsList.length} 个新单词`);
+
     if (newWordsList.length > 0) {
       try {
         const insertData = newWordsList.map((wordData: any) => ({
-          word: wordData.word,
+          word: wordData.word.toLowerCase(), // 统一使用小写
           phonetic: wordData.pronunciation || '',
           meaning: wordData.definition || '',
           example: wordData.example || '',
           exampleTranslation: wordData.exampleTranslation || '',
           difficulty: 1,
         }));
+
+        console.log(`[批量上传] 插入数据示例:`, JSON.stringify(insertData.slice(0, 2), null, 2));
 
         const inserted = await db
           .insert(words)
