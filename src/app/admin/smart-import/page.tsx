@@ -52,7 +52,6 @@ interface UploadResult {
 export default function SmartImportPage() {
   const [uploadType, setUploadType] = useState('exam');
   const [file, setFile] = useState<File | null>(null);
-  const [version, setVersion] = useState('');
   const [description, setDescription] = useState('');
   const [previewText, setPreviewText] = useState('');
   const [isUploading, setIsUploading] = useState(false);
@@ -97,18 +96,12 @@ export default function SmartImportPage() {
       return;
     }
 
-    if (!version) {
-      alert('请输入版本号');
-      return;
-    }
-
     setIsUploading(true);
     setUploadProgress(0);
     setUploadResult(null);
 
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('version', version);
     formData.append('description', description || '');
 
     try {
@@ -230,17 +223,6 @@ export default function SmartImportPage() {
                 </p>
               </div>
 
-              {/* 版本号 */}
-              <div className="space-y-2">
-                <Label>版本号 *</Label>
-                <Input
-                  placeholder="例如: v1.0.0, 2024-01"
-                  value={version}
-                  onChange={(e) => setVersion(e.target.value)}
-                  disabled={isUploading}
-                />
-              </div>
-
               {/* 描述 */}
               <div className="space-y-2">
                 <Label>描述</Label>
@@ -269,7 +251,7 @@ export default function SmartImportPage() {
               {/* 上传按钮 */}
               <Button
                 onClick={handleUpload}
-                disabled={isUploading || !file || !version}
+                disabled={isUploading || !file}
                 className="w-full"
               >
                 {isUploading ? (
