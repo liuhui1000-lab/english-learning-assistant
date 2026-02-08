@@ -76,21 +76,57 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 智能解析单词文档
-    const parsedWords = await parseWordDocument(text, {
+    // 首先尝试规则解析
+    console.log('[单词上传] 尝试规则解析');
+    let parsedWords = await parseWordDocument(text, {
       fetchPronunciation: true,   // 获取发音
       fetchPartOfSpeech: true,    // 获取词性
       fetchExample: includeExamples, // 是否获取例句
     });
 
+    // 如果规则解析失败或结果为空，尝试 AI 解析
+    if (parsedWords.length === 0) {
+      console.log('[单词上传] 规则解析失败，尝试 AI 智能解析');
+
+      try {
+        const aiResult = await fetch('/api/admin/ai/parse-words', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: text,
+            includeExamples: includeExamples
+          }),
+        });
+
+        if (aiResult.ok) {
+          const aiData = await aiResult.json();
+          if (aiData.success && aiData.data && aiData.data.words) {
+            parsedWords = aiData.data.words;
+            console.log('[单词上传] AI 解析成功，解析到', parsedWords.length, '个单词');
+          }
+        }
+      } catch (error) {
+        console.error('[单词上传] AI 解析失败:', error);
+        // AI 解析失败，继续返回规则解析的错误
+      }
+    }
+
     if (parsedWords.length === 0) {
       return NextResponse.json(
-        { error: '未能从文档中解析出单词，请检查格式' },
+        {
+          error: '未能从文档中解析出单词',
+          suggestions: [
+            '请检查文件内容是否包含英语单词',
+            '请尝试使用更简单的格式（如：adventure - 冒险）',
+            '请确保 AI 提供商已正确配置',
+            '请检查网络连接是否正常'
+          ]
+        },
         { status: 400 }
       );
     }
 
-    console.log(`成功解析 ${parsedWords.length} 个单词`);
+    console.log(`[单词上传] 成功解析 ${parsedWords.length} 个单词`);
 
     // 保存到数据库
     const db = await getDb();
