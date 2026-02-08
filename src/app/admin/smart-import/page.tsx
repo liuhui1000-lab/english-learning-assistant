@@ -78,6 +78,7 @@ interface UploadResult {
 }
 
 export type MergeStrategyType = 'replace' | 'append' | 'smart_merge' | 'skip';
+export type OCREngineType = 'tesseract' | 'paddleocr';
 
 export default function SmartImportPage() {
   const [uploadType, setUploadType] = useState('exam');
@@ -86,6 +87,7 @@ export default function SmartImportPage() {
   const [mergeStrategy, setMergeStrategy] = useState<MergeStrategyType>('smart_merge');
   const [useBatchMode, setUseBatchMode] = useState(false); // 是否使用分批模式
   const [useOCR, setUseOCR] = useState(false); // 是否使用 OCR
+  const [ocrEngine, setOcrEngine] = useState<OCREngineType>('tesseract'); // OCR 引擎
   const [previewText, setPreviewText] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -234,22 +236,54 @@ export default function SmartImportPage() {
     setUploadResult(null);
 
     try {
-      console.log('[OCR] 开始识别图片:', file.name);
+      console.log(`[${ocrEngine.toUpperCase()}] 开始识别图片:`, file.name);
 
-      // 动态导入 OCR 工具
-      const { recognizeText } = await import('@/utils/ocr');
+      let ocrResult: {
+        text: string;
+        confidence: number;
+        lines?: any[];
+      };
 
-      // 进行 OCR 识别
-      const ocrResult = await recognizeText(
-        file,
-        { language: 'eng+chi_sim' },
-        (progress) => {
-          setOcrProgress(progress);
-          setUploadProgress(progress * 0.5); // OCR 占总进度的 50%
+      // 根据选择的 OCR 引擎调用不同的函数
+      if (ocrEngine === 'paddleocr') {
+        // 使用 PaddleOCR API
+        const { recognizeWithPaddleOCR } = await import('@/utils/paddleOCR');
+
+        const paddleResult = await recognizeWithPaddleOCR(
+          file,
+          (progress) => {
+            setOcrProgress(progress);
+            setUploadProgress(progress * 0.5); // OCR 占总进度的 50%
+          }
+        );
+
+        if (!paddleResult.success) {
+          alert(`PaddleOCR 识别失败: ${paddleResult.error}`);
+          return;
         }
-      );
 
-      console.log('[OCR] 识别完成:', ocrResult);
+        ocrResult = {
+          text: paddleResult.text,
+          confidence: paddleResult.confidence,
+          lines: paddleResult.lines,
+        };
+      } else {
+        // 使用 Tesseract.js
+        const { recognizeText } = await import('@/utils/ocr');
+
+        const tesseractResult = await recognizeText(
+          file,
+          { language: 'eng+chi_sim' },
+          (progress) => {
+            setOcrProgress(progress);
+            setUploadProgress(progress * 0.5); // OCR 占总进度的 50%
+          }
+        );
+
+        ocrResult = tesseractResult;
+      }
+
+      console.log(`[${ocrEngine.toUpperCase()}] 识别完成:`, ocrResult);
 
       if (ocrResult.text.trim().length === 0) {
         alert('OCR 识别失败，未能从图片中提取到文字。请尝试使用更清晰的图片。');
@@ -273,7 +307,7 @@ export default function SmartImportPage() {
 
       const formData = new FormData();
       formData.append('file', textFile);
-      formData.append('description', `OCR 识别: ${file.name}`);
+      formData.append('description', `OCR 识别 (${ocrEngine}): ${file.name}`);
 
       if (uploadType === 'grammar' || uploadType === 'transformation') {
         formData.append('mergeStrategy', mergeStrategy);
@@ -306,9 +340,9 @@ export default function SmartImportPage() {
       if (data.success) {
         setUploadResult(data.data);
         setUploadProgress(100);
-        alert(`OCR 识别成功！\n\n置信度: ${ocrResult.confidence.toFixed(2)}%\n${data.success ? '上传成功！' : data.error}`);
+        alert(`${ocrEngine.toUpperCase()} 识别成功！\n\n置信度: ${ocrResult.confidence.toFixed(2)}%\n${data.success ? '上传成功！' : data.error}`);
       } else {
-        alert(`OCR 识别成功，但上传失败：${data.error}`);
+        alert(`${ocrEngine.toUpperCase()} 识别成功，但上传失败：${data.error}`);
       }
     } catch (error) {
       console.error('OCR 上传失败:', error);
@@ -485,12 +519,47 @@ export default function SmartImportPage() {
                 </div>
 
                 {useOCR && (
-                  <Alert>
-                    <Info className="h-4 w-4" />
-                    <AlertDescription>
-                      OCR 识别将自动从图片中提取文字。首次使用需要加载字库（约 10MB），可能需要一些时间。
-                    </AlertDescription>
-                  </Alert>
+                  <>
+                    {/* OCR 引擎选择 */}
+                    <div className="space-y-2">
+                      <Label>OCR 引擎</Label>
+                      <Select value={ocrEngine} onValueChange={(value: any) => setOcrEngine(value)}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="tesseract">
+                            Tesseract.js（免费，纯前端）
+                          </SelectItem>
+                          <SelectItem value="paddleocr">
+                            PaddleOCR API（推荐，识别效果好）
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-sm text-muted-foreground">
+                        {ocrEngine === 'tesseract' && '免费开源，首次使用需要加载字库（约 10MB），完全在浏览器端运行。'}
+                        {ocrEngine === 'paddleocr' && '官方 API，识别效果好，支持中英文混合，速度快。需要配置 API Token。'}
+                      </p>
+                    </div>
+
+                    {/* 引擎说明 */}
+                    {ocrEngine === 'paddleocr' && (
+                      <Alert>
+                        <Sparkles className="h-4 w-4" />
+                        <AlertDescription>
+                          PaddleOCR API 识别效果更好，特别是手写文字和复杂排版。建议优先使用。
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                    {ocrEngine === 'tesseract' && (
+                      <Alert>
+                        <Info className="h-4 w-4" />
+                        <AlertDescription>
+                          OCR 识别将自动从图片中提取文字。首次使用需要加载字库（约 10MB），可能需要一些时间。
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                  </>
                 )}
               </div>
 
