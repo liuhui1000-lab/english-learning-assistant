@@ -96,20 +96,27 @@ export async function parseWordsWithAI(
     includeExamples?: boolean;
     maxTokens?: number;
     timeout?: number;  // 添加超时参数
+    batchSize?: number;  // 批次大小（字符数）
   } = {}
 ): Promise<{ success: boolean; words: ParsedWord[]; error?: string }> {
   const {
     includeExamples = false,
     maxTokens = 4000,
-    timeout = 25000  // 默认 25 秒超时
+    timeout = 25000,  // 默认 25 秒超时
+    batchSize = 8000  // 每批次 8000 字符
   } = options;
 
   console.log('[AI] 开始解析单词，文本长度:', text.length);
 
-  // 如果文本太长，截取前 10000 个字符
-  const truncatedText = text.length > 10000 ? text.substring(0, 10000) : text;
-  if (truncatedText.length < text.length) {
-    console.log('[AI] 文本过长，已截取到前 10000 个字符');
+  // 如果文本过长，分批处理
+  if (text.length > batchSize) {
+    console.log('[AI] 文本过长，启用分批处理模式');
+    return await parseWordsWithBatches(text, {
+      includeExamples,
+      maxTokens,
+      timeout,
+      batchSize
+    });
   }
 
   // 获取 AI 配置
@@ -217,7 +224,7 @@ export async function parseWordsWithAI(
         model: provider.model_name,
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: `请解析以下文本中的单词：\n\n${truncatedText}` }
+          { role: 'user', content: `请解析以下文本中的单词：\n\n${text}` }
         ],
         max_tokens: maxTokens,
         temperature: 0.3,
@@ -226,11 +233,11 @@ export async function parseWordsWithAI(
 
     // 也要更新 Gemini 的文本
     if (provider.provider_name === 'gemini') {
-      payload.contents[1].parts[0].text = `\n\n要解析的文本：\n${truncatedText}`;
+      payload.contents[1].parts[0].text = `\n\n要解析的文本：\n${text}`;
     } else if (provider.provider_name === 'claude') {
-      payload.messages[0].content = `请解析以下文本中的单词：\n\n${truncatedText}`;
+      payload.messages[0].content = `请解析以下文本中的单词：\n\n${text}`;
     } else if (provider.provider_name === 'minimax') {
-      payload.messages[0].text = `${systemPrompt}\n\n要解析的文本：\n${truncatedText}`;
+      payload.messages[0].text = `${systemPrompt}\n\n要解析的文本：\n${text}`;
     }
 
     // 创建超时控制器
@@ -379,4 +386,197 @@ export async function parseWordsWithAI(
       error: error instanceof Error ? error.message : '解析过程出错'
     };
   }
+}
+
+/**
+ * 分批解析大文本
+ * 将文本分成多个批次，每批次分别调用 AI 解析
+ */
+async function parseWordsWithBatches(
+  text: string,
+  options: {
+    includeExamples?: boolean;
+    maxTokens?: number;
+    timeout?: number;
+    batchSize?: number;
+  }
+): Promise<{ success: boolean; words: ParsedWord[]; error?: string }> {
+  const { batchSize = 8000, timeout = 25000, maxTokens = 4000, includeExamples = false } = options;
+
+  console.log('[AI-分批] 开始分批处理，总文本长度:', text.length, '批次大小:', batchSize);
+
+  const paragraphs = text.split(/\n\s*\n/).filter(p => p.trim().length > 0);
+  console.log('[AI-分批] 分割出', paragraphs.length, '个段落');
+
+  const batches: string[] = [];
+  let currentBatch = '';
+
+  for (const paragraph of paragraphs) {
+    if (currentBatch.length + paragraph.length > batchSize && currentBatch.length > 0) {
+      batches.push(currentBatch.trim());
+      currentBatch = '';
+    }
+    currentBatch += (currentBatch ? '\n\n' : '') + paragraph;
+  }
+
+  if (currentBatch.trim().length > 0) {
+    batches.push(currentBatch.trim());
+  }
+
+  console.log('[AI-分批] 分成', batches.length, '个批次');
+
+  const provider = await getActiveAIProvider();
+  if (!provider) {
+    return { success: false, words: [], error: '没有可用的 AI 配置' };
+  }
+
+  const apiConfig = API_ENDPOINTS[provider.provider_name];
+  if (!apiConfig) {
+    return { success: false, words: [], error: `不支持的 AI 提供商` };
+  }
+
+  const allWords: ParsedWord[] = [];
+  const seenWords = new Set<string>();
+
+  for (let i = 0; i < batches.length; i++) {
+    console.log(`[AI-分批] 处理第 ${i + 1}/${batches.length} 个批次`);
+
+    try {
+      const words = await parseSingleBatch(
+        provider,
+        apiConfig,
+        batches[i],
+        includeExamples,
+        maxTokens,
+        timeout,
+        provider.provider_name
+      );
+
+      for (const word of words) {
+        if (!seenWords.has(word.word)) {
+          seenWords.add(word.word);
+          allWords.push(word);
+        }
+      }
+    } catch (error) {
+      console.error(`[AI-分批] 批次 ${i + 1} 解析失败:`, error);
+    }
+  }
+
+  console.log('[AI-分批] 完成，共解析到', allWords.length, '个唯一单词');
+
+  return {
+    success: allWords.length > 0,
+    words: allWords,
+    error: allWords.length === 0 ? '所有批次都解析失败' : undefined
+  };
+}
+
+/**
+ * 解析单个批次
+ */
+async function parseSingleBatch(
+  provider: AIProvider,
+  apiConfig: any,
+  text: string,
+  includeExamples: boolean,
+  maxTokens: number,
+  timeout: number,
+  providerName: string
+): Promise<ParsedWord[]> {
+  const systemPrompt = includeExamples 
+    ? '从文本中提取所有英语单词，输出JSON：{"words":[{"word":"小写","pronunciation":"","partOfSpeech":"","definition":"","example":"","exampleTranslation":""}]}'
+    : '从文本中提取所有英语单词，输出JSON：{"words":[{"word":"小写","pronunciation":"","partOfSpeech":"","definition":"","example":"","exampleTranslation":""}]}';
+
+  let payload: any;
+
+  if (providerName === 'gemini') {
+    payload = {
+      contents: [{ parts: [{ text: systemPrompt }, { text: text }] }],
+      generationConfig: { maxOutputTokens: maxTokens, temperature: 0.3 }
+    };
+  } else if (providerName === 'claude') {
+    payload = {
+      model: provider.model_name,
+      max_tokens: maxTokens,
+      temperature: 0.3,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: text }]
+    };
+  } else if (providerName === 'minimax') {
+    payload = {
+      model: provider.model_name,
+      tokens_to_generate: maxTokens,
+      temperature: 0.3,
+      messages: [{ sender_type: 'USER', sender_name: 'User', text: systemPrompt + text }]
+    };
+  } else {
+    payload = {
+      model: provider.model_name,
+      messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: text }],
+      max_tokens: maxTokens,
+      temperature: 0.3,
+    };
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+  const response = await fetch(apiConfig.url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...apiConfig.headers(provider.api_key) },
+    body: JSON.stringify(payload),
+    signal: controller.signal
+  });
+
+  clearTimeout(timeoutId);
+
+  if (!response.ok) {
+    throw new Error(`AI 调用失败 (${response.status})`);
+  }
+
+  const responseData = await response.json();
+
+  let responseText = '';
+  if (providerName === 'gemini') {
+    responseText = responseData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  } else if (providerName === 'claude') {
+    responseText = responseData.content?.[0]?.text || '';
+  } else if (providerName === 'minimax') {
+    responseText = responseData.choices?.[0]?.messages?.[0]?.text || '';
+  } else {
+    responseText = responseData.choices?.[0]?.message?.content || '';
+  }
+
+  if (!responseText) {
+    throw new Error('AI 返回的内容为空');
+  }
+
+  responseText = responseText.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+
+  let parsed: { words: ParsedWord[] };
+  try {
+    parsed = JSON.parse(responseText);
+  } catch {
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error('AI 返回格式不正确');
+    }
+    parsed = JSON.parse(jsonMatch[0]);
+  }
+
+  if (!parsed.words || !Array.isArray(parsed.words)) {
+    throw new Error('AI 返回格式不正确');
+  }
+
+  return parsed.words
+    .map((w: any) => ({
+      word: w.word?.toLowerCase()?.trim() || '',
+      pronunciation: w.pronunciation || '',
+      partOfSpeech: w.partOfSpeech || '',
+      definition: w.definition || '',
+      example: w.example || '',
+      exampleTranslation: w.exampleTranslation || ''
+    }))
+    .filter((w: ParsedWord) => w.word.length > 0);
 }
