@@ -11,9 +11,9 @@ import {
   wordTransformations,
   collocations,
   userWordFamilyProgress,
-  type WordFamilyWithRelations,
 } from './shared/schema';
 import { eq, sql, and } from 'drizzle-orm';
+import type { WordFamilyWithRelations } from './wordFamilyManager';
 
 export interface LearningContent {
   grade: string;
