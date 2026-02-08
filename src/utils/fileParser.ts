@@ -8,18 +8,27 @@
 
 import mammoth from 'mammoth';
 
-// 动态导入 pdf-parse 以避免类型错误
-let pdf: any;
-try {
-  pdf = require('pdf-parse');
-} catch (e) {
-  console.warn('pdf-parse not available');
-}
-
 export interface ParseResult {
   text: string;
   format: 'text' | 'docx' | 'pdf';
   warnings: string[];
+}
+
+/**
+ * 解析 PDF 文件
+ */
+async function parsePDF(buffer: Buffer): Promise<string> {
+  try {
+    // 使用动态导入
+    const pdfModule = await import('pdf-parse');
+    // pdf-parse 可能同时有 default 和命名导出
+    const pdf = (pdfModule as any).default || pdfModule;
+    const pdfResult = await pdf(buffer);
+    return pdfResult.text;
+  } catch (error) {
+    console.error('[parsePDF] 解析失败:', error);
+    throw new Error('PDF 解析失败，请确保文件格式正确');
+  }
 }
 
 /**
@@ -63,13 +72,8 @@ export async function parseFile(file: File): Promise<ParseResult> {
       case 'pdf':
         // 使用 pdf-parse 解析 pdf 文件
         console.log('[parseFile] 使用 pdf-parse 解析 pdf 文件');
-        if (!pdf) {
-          throw new Error('pdf-parse 模块未加载');
-        }
         const pdfBuffer = Buffer.from(await file.arrayBuffer());
-        // @ts-ignore
-        const pdfResult = await pdf(pdfBuffer);
-        text = pdfResult.text;
+        text = await parsePDF(pdfBuffer);
         format = 'pdf';
         console.log(`[parseFile] pdf 解析完成，文本长度: ${text.length}`);
         break;
