@@ -3,7 +3,7 @@
  * 管理词族、单词、词转、搭配之间的关联关系
  */
 
-import { getDb } from '../db';
+import { getDb } from '@/utils/db';
 import {
   wordFamilies,
   words,

@@ -4,7 +4,7 @@
  * 支持每个年级分为上学期和下学期
  */
 
-import { getDb } from '../db';
+import { getDb } from '@/utils/db';
 import {
   wordFamilies,
   words,

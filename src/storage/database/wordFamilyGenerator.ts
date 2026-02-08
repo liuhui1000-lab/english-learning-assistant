@@ -3,7 +3,7 @@
  * 基于词转表生成词族，并关联单词和词转
  */
 
-import { getDb } from '../db';
+import { getDb } from '@/utils/db';
 import {
   wordFamilies,
   words,

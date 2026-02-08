@@ -1,14 +1,15 @@
 /**
- * 学习内容向下兼容测试 API
+ * 学习内容向下兼容测试 API（支持学期）
  * GET /api/learning/test-compatibility - 测试向下兼容逻辑
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import {
-  getAccessibleGrades,
+  getAccessibleGradeSemesters,
   adaptWordFamiliesForUser,
   getUserLearningStats,
-  generateLearningPlan,
+  parseGradeSemester,
+  combineGradeSemester,
 } from '@/storage/database/learningContentAdapter';
 import { verifyAdmin } from '@/utils/authHelper';
 
@@ -27,39 +28,55 @@ export async function GET(request: NextRequest) {
 
     const results: any[] = [];
 
-    // 测试各年级的向下兼容逻辑
-    const grades = ['6年级', '7年级', '8年级', '9年级'];
+    // 测试各年级学期的向下兼容逻辑
+    const gradeSemesters = [
+      '6年级上学期',
+      '6年级下学期',
+      '7年级上学期',
+      '7年级下学期',
+      '8年级上学期',
+      '8年级下学期',
+      '9年级上学期',
+      '9年级下学期',
+    ];
 
-    for (const grade of grades) {
-      const accessibleGrades = getAccessibleGrades(grade);
+    for (const gradeSemester of gradeSemesters) {
+      const accessibleGradeSemesters = getAccessibleGradeSemesters(gradeSemester);
 
       // 获取词族
-      const families = await adaptWordFamiliesForUser(grade, 10);
+      const families = await adaptWordFamiliesForUser(gradeSemester, 10);
 
       // 统计单词
       const stats: Record<string, { count: number; words: string[] }> = {
-        '6年级': { count: 0, words: [] },
-        '7年级': { count: 0, words: [] },
-        '8年级': { count: 0, words: [] },
-        '9年级': { count: 0, words: [] },
+        '6年级上学期': { count: 0, words: [] },
+        '6年级下学期': { count: 0, words: [] },
+        '7年级上学期': { count: 0, words: [] },
+        '7年级下学期': { count: 0, words: [] },
+        '8年级上学期': { count: 0, words: [] },
+        '8年级下学期': { count: 0, words: [] },
+        '9年级上学期': { count: 0, words: [] },
+        '9年级下学期': { count: 0, words: [] },
       };
 
       let totalWords = 0;
-      let currentGradeWords = 0;
+      let currentSemesterWords = 0;
       let reviewWords = 0;
 
       families.forEach(family => {
         family.words.forEach(word => {
           const wordGrade = word.grade || '8年级';
-          if (stats[wordGrade]) {
-            stats[wordGrade].count++;
-            stats[wordGrade].words.push(word.word);
+          const wordSemester = word.semester || '下学期';
+          const wordGradeSemester = combineGradeSemester(wordGrade, wordSemester);
+
+          if (stats[wordGradeSemester]) {
+            stats[wordGradeSemester].count++;
+            stats[wordGradeSemester].words.push(word.word);
           }
 
-          if (accessibleGrades.includes(wordGrade)) {
+          if (accessibleGradeSemesters.includes(wordGradeSemester)) {
             totalWords++;
-            if (wordGrade === grade) {
-              currentGradeWords++;
+            if (wordGradeSemester === gradeSemester) {
+              currentSemesterWords++;
             } else {
               reviewWords++;
             }
@@ -68,20 +85,20 @@ export async function GET(request: NextRequest) {
       });
 
       results.push({
-        grade,
-        accessibleGrades,
+        gradeSemester,
+        accessibleGradeSemesters,
         totalFamilies: families.length,
         totalWords,
-        currentGradeWords,
+        currentSemesterWords,
         reviewWords,
-        wordsByGrade: stats,
+        wordsByGradeSemester: stats,
       });
     }
 
     return NextResponse.json({
       success: true,
       data: {
-        summary: '向下兼容逻辑测试结果',
+        summary: '向下兼容逻辑测试结果（支持学期）',
         results,
       },
       message: '测试完成',
