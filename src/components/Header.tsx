@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { MessageSquare, User, LogOut, Settings, Shield, Key } from 'lucide-react';
+import { authFetch } from '@/utils/authFetch';
 
 interface UserInfo {
   userId: string;
@@ -57,14 +58,19 @@ export function Header() {
 
   const loadUserInfo = async () => {
     try {
-      const response = await fetch('/api/auth/me');
+      setLoading(true);
+      const response = await authFetch('/api/auth/me');
       const data = await response.json();
 
       if (data.success) {
         setUserInfo(data.data);
+      } else {
+        // 如果返回未登录，清除本地状态
+        setUserInfo(null);
       }
     } catch (error) {
       console.error('加载用户信息失败:', error);
+      setUserInfo(null);
     } finally {
       setLoading(false);
     }
@@ -72,13 +78,25 @@ export function Header() {
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
+      // 调用登出 API
+      await authFetch('/api/auth/logout', { method: 'POST' });
+      
+      // 清除本地状态
       setUserInfo(null);
+      localStorage.removeItem('auth_token');
+      
       // 通知其他组件用户已登出
       window.dispatchEvent(new CustomEvent('auth-changed', { detail: { loggedIn: false } }));
+      
+      // 跳转到登录页
       router.push('/login');
     } catch (error) {
       console.error('登出失败:', error);
+      // 即使 API 调用失败，也要清除本地状态
+      setUserInfo(null);
+      localStorage.removeItem('auth_token');
+      window.dispatchEvent(new CustomEvent('auth-changed', { detail: { loggedIn: false } }));
+      router.push('/login');
     }
   };
 
