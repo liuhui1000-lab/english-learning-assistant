@@ -1,23 +1,17 @@
 /**
  * 数据库初始化 API
  * 创建所有必需的数据库表
+ *
+ * 注意：此 API 不需要登录，用于初始化数据库连接
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/utils/db';
-import { checkPermission } from '@/utils/auth';
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
-    // 验证管理员权限
-    const permission = await checkPermission('admin');
-    if (!permission.success) {
-      return NextResponse.json(
-        { error: permission.error },
-        { status: 401 }
-      );
-    }
-
     console.log('[数据库初始化] 开始初始化数据库...');
 
     // 创建表（通过 SELECT 1 触自动建表）

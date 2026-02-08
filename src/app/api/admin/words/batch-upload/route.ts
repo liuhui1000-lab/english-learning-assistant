@@ -39,6 +39,7 @@ export async function POST(request: NextRequest) {
     }
 
     console.log(`[批量上传] 批次 ${batchNumber}/${totalBatches}，单词数量: ${wordsData.length}`);
+    console.log(`[批量上传] 前3个单词:`, wordsData.slice(0, 3));
 
     const db = await getDb();
     let newWords = 0;
@@ -47,10 +48,14 @@ export async function POST(request: NextRequest) {
 
     // 批量检查已存在的单词
     const allWords = wordsData.map((w: any) => w.word);
+    console.log(`[批量上传] 查询已存在单词，数量: ${allWords.length}`);
+
     const existingWordsResult = await db
       .select()
       .from(words)
       .where(inArray(words.word, allWords));
+
+    console.log(`[批量上传] 查询结果: 已存在 ${existingWordsResult.length} 个单词`);
 
     const existingWordsMap = new Map(
       existingWordsResult.map(w => [w.word, w])

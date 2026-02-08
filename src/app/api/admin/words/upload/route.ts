@@ -195,12 +195,14 @@ export async function POST(request: NextRequest) {
       const db = await getDb();
       const insertedWords = [];
 
-      // 批量检查已存在的单词
+      // 批量检查已存在的单词（使用 inArray 替代 ANY 操作符）
       const allWords = parsedWords.map(w => w.word);
+      const { inArray } = await import('drizzle-orm');
+
       const existingWordsResult = await db
         .select()
         .from(words)
-        .where(sql`${words.word} = ANY(${allWords})`);
+        .where(inArray(words.word, allWords));
 
       console.log(`[单词上传] [${Date.now() - startTime}ms] 查询已存在单词完成`, {
         total: allWords.length,
