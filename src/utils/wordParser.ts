@@ -40,33 +40,44 @@ export async function parseWordDocument(
     fetchPartOfSpeech = true,
     fetchExample = false,
   } = options;
-  
+
+  console.log('[wordParser] 开始解析单词文档，文本长度:', text.length);
+
   // 清理文本（去除空行、多余空格）
   const lines = text
     .split('\n')
     .map(line => line.trim())
     .filter(line => line.length > 0);
-  
+
+  console.log('[wordParser] 清理后总行数:', lines.length);
+  console.log('[wordParser] 前5行内容:', lines.slice(0, 5));
+
   const words: ParsedWord[] = [];
-  
+
   // 尝试多种格式解析
+  console.log('[wordParser] 尝试完整格式解析');
   const parsed = tryParseCompleteFormat(lines);
-  if (parsed) {
+  if (parsed && parsed.length > 0) {
+    console.log('[wordParser] 完整格式解析成功，解析到', parsed.length, '个单词');
     // 完整格式，直接使用
     return parsed;
   }
-  
+
   // 尝试简化格式（单词 + 词义）
+  console.log('[wordParser] 尝试简化格式解析');
   const simpleParsed = tryParseSimpleFormat(lines);
-  if (simpleParsed) {
+  if (simpleParsed && simpleParsed.length > 0) {
+    console.log('[wordParser] 简化格式解析成功，解析到', simpleParsed.length, '个单词');
     // 补充发音和词性
     const enriched = await enrichWords(simpleParsed, options);
     return enriched;
   }
-  
+
   // 尝试单词列表格式
+  console.log('[wordParser] 尝试列表格式解析');
   const listParsed = tryParseListFormat(lines);
-  if (listParsed) {
+  if (listParsed && listParsed.length > 0) {
+    console.log('[wordParser] 列表格式解析成功，解析到', listParsed.length, '个单词');
     // 使用AI生成完整信息
     const enriched = await enrichWords(listParsed, {
       fetchPronunciation: true,
@@ -75,9 +86,10 @@ export async function parseWordDocument(
     });
     return enriched;
   }
-  
-  // 都失败了，尝试使用AI
-  return await parseWithAI(text);
+
+  console.log('[wordParser] 所有规则解析失败，返回空数组');
+  // 都失败了，返回空数组（让调用者决定是否使用AI）
+  return [];
 }
 
 /**
@@ -141,27 +153,60 @@ function tryParseCompleteFormat(lines: string[]): ParsedWord[] | null {
  * adventure - 冒险
  * bravery: 勇气
  * courage 勇敢
+ * adventure 冒险
  */
 function tryParseSimpleFormat(lines: string[]): ParsedWord[] {
   const words: ParsedWord[] = [];
-  
+
+  console.log('[wordParser] 尝试解析简化格式，总行数:', lines.length);
+
   for (const line of lines) {
-    // 支持多种分隔符：- : 、空格
-    const match = line.match(/^([a-zA-Z]+)\s*[-：:]\s*(.+)$/);
-    
+    console.log('[wordParser] 处理行:', line);
+
+    // 跳过太短的行
+    if (line.length < 3) {
+      continue;
+    }
+
+    // 跳过纯中文行
+    if (/^[\u4e00-\u9fa5\s]+$/.test(line)) {
+      console.log('[wordParser] 跳过纯中文行');
+      continue;
+    }
+
+    // 支持多种分隔符：- : 、空格、Tab、句号、顿号
+    // 格式1: 单词 + 空格 + 中文词义
+    const spaceMatch = line.match(/^([a-zA-Z]+)\s+([\u4e00-\u9fa5\s].+)$/);
+    // 格式2: 单词 + 分隔符 + 中文词义
+    const separatorMatch = line.match(/^([a-zA-Z]+)\s*[-：:、]\s*(.+)$/);
+
+    let match = spaceMatch || separatorMatch;
+
     if (match) {
       const [, word, definition] = match;
+      // 清理词义
+      const cleanDefinition = definition.replace(/[\s\r\n]+/g, ' ').trim();
+      console.log('[wordParser] 匹配成功 - 单词:', word, '词义:', cleanDefinition);
       words.push({
         word: word.toLowerCase(),
         pronunciation: '',
         partOfSpeech: '',
-        definition,
+        definition: cleanDefinition,
         example: '',
         exampleTranslation: '',
       });
+    } else {
+      // 检查是否是纯英文单词（可能是列表格式）
+      const pureWordMatch = line.match(/^([a-zA-Z]+)$/);
+      if (pureWordMatch) {
+        console.log('[wordParser] 发现纯单词:', pureWordMatch[1]);
+      } else {
+        console.log('[wordParser] 未匹配到格式:', line);
+      }
     }
   }
-  
+
+  console.log('[wordParser] 简化格式解析完成，解析到', words.length, '个单词');
   return words;
 }
 
@@ -174,12 +219,17 @@ function tryParseSimpleFormat(lines: string[]): ParsedWord[] {
  */
 function tryParseListFormat(lines: string[]): ParsedWord[] {
   const words: ParsedWord[] = [];
-  
+
+  console.log('[wordParser] 尝试解析列表格式，总行数:', lines.length);
+
   for (const line of lines) {
-    // 纯单词
+    console.log('[wordParser] 处理行:', line);
+
+    // 纯单词（只包含字母）
     const match = line.match(/^([a-zA-Z]+)$/);
-    
+
     if (match) {
+      console.log('[wordParser] 匹配成功 - 单词:', match[1]);
       words.push({
         word: match[1].toLowerCase(),
         pronunciation: '',
@@ -190,7 +240,8 @@ function tryParseListFormat(lines: string[]): ParsedWord[] {
       });
     }
   }
-  
+
+  console.log('[wordParser] 列表格式解析完成，解析到', words.length, '个单词');
   return words;
 }
 

@@ -84,37 +84,34 @@ export async function POST(request: NextRequest) {
       fetchExample: includeExamples, // 是否获取例句
     });
 
+    console.log('[单词上传] 规则解析结果:', {
+      success: parsedWords.length > 0,
+      wordCount: parsedWords.length,
+      firstWord: parsedWords.length > 0 ? parsedWords[0] : null,
+    });
+
     // 如果规则解析失败或结果为空，尝试 AI 解析
     if (parsedWords.length === 0) {
       console.log('[单词上传] 规则解析失败，尝试 AI 智能解析');
       console.log('[单词上传] 文本内容长度:', text.length);
-      console.log('[单词上传] 文本内容预览（前200字符）:', text.substring(0, 200));
+      console.log('[单词上传] 文本内容预览（前500字符）:', text.substring(0, 500));
 
       try {
-        const aiResult = await fetch('/api/admin/ai/parse-words', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            text: text,
-            includeExamples: includeExamples
-          }),
+        // 使用内部函数而不是API调用，避免网络请求问题
+        const { parseWordsWithAI } = await import('@/utils/aiHelper');
+        const aiResult = await parseWordsWithAI(text, { includeExamples });
+
+        console.log('[单词上传] AI 解析结果:', {
+          success: aiResult.success,
+          wordCount: aiResult.words?.length || 0,
+          error: aiResult.error,
         });
 
-        console.log('[单词上传] AI 响应状态:', aiResult.status);
-
-        if (aiResult.ok) {
-          const aiData = await aiResult.json();
-          console.log('[单词上传] AI 响应数据:', JSON.stringify(aiData).substring(0, 500));
-
-          if (aiData.success && aiData.data && aiData.data.words) {
-            parsedWords = aiData.data.words;
-            console.log('[单词上传] AI 解析成功，解析到', parsedWords.length, '个单词');
-          } else {
-            console.error('[单词上传] AI 解析返回了数据，但格式不正确:', aiData);
-          }
+        if (aiResult.success && aiResult.words && aiResult.words.length > 0) {
+          parsedWords = aiResult.words;
+          console.log('[单词上传] AI 解析成功，解析到', parsedWords.length, '个单词');
         } else {
-          const errorText = await aiResult.text();
-          console.error('[单词上传] AI 解析失败，状态码:', aiResult.status, '响应:', errorText);
+          console.error('[单词上传] AI 解析失败:', aiResult.error);
         }
       } catch (error) {
         console.error('[单词上传] AI 解析异常:', error);
