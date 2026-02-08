@@ -31,8 +31,10 @@ export async function GET(request: NextRequest) {
 
     // 查询一些具体的单词（用于测试）
     const testWords = ['after', 'age', 'always', 'australia', 'canada', 'usa', 'china'];
+    // 使用 OR 查询替代 ANY
+    const orConditions = testWords.map(w => `LOWER(word) = '${w.toLowerCase()}'`).join(' OR ');
     const testQuery = await db.execute(
-      `SELECT word, phonetic, meaning FROM words WHERE LOWER(word) = ANY(('${testWords.map(w => w.toLowerCase()).join("','")}'))`
+      `SELECT word, phonetic, meaning FROM words WHERE ${orConditions}`
     );
 
     console.log('[单词调试] 总数:', totalCount);
