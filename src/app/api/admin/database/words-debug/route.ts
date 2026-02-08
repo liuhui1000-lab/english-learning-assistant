@@ -32,8 +32,7 @@ export async function GET(request: NextRequest) {
     // 查询一些具体的单词（用于测试）
     const testWords = ['after', 'age', 'always', 'australia', 'canada', 'usa', 'china'];
     const testQuery = await db.execute(
-      `SELECT word, phonetic, meaning FROM words WHERE LOWER(word) = ANY($1)`,
-      [testWords.map(w => w.toLowerCase())]
+      `SELECT word, phonetic, meaning FROM words WHERE LOWER(word) = ANY(('${testWords.map(w => w.toLowerCase()).join("','")}'))`
     );
 
     console.log('[单词调试] 总数:', totalCount);
