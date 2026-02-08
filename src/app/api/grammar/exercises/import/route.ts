@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
               name: ex.subcategory,
               category: ex.category,
               description: `上海中考语法 - ${ex.category} - ${ex.subcategory}`,
-              level: 2 // 初二
+              level: '8年级'
             })
             .returning();
 

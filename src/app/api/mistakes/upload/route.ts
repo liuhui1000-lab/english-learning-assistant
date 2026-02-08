@@ -240,7 +240,7 @@ async function saveGrammarMistake(userId: string, question: any): Promise<NextRe
             name: question.knowledgePoint,
             category: question.subKnowledgePoint || '通用',
             description: `用户错题 - ${question.knowledgePoint}`,
-            level: 2, // 初二
+            level: '8年级',
           })
           .returning();
         grammarPointId = newPoint.id;
