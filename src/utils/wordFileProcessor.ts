@@ -55,13 +55,43 @@ export function extractWordsFromText(text: string): WordData[] {
     // 跳过太短的行
     if (line.length < 3) continue;
 
-    // 跳过纯中文行
-    if (/^[\u4e00-\u9fa5\s]+$/.test(line)) continue;
+    // 跳过纯中文行（标题、说明等）
+    if (/^[\u4e00-\u9fa5\s（）()]+$/.test(line)) continue;
 
-    // 跳过包含数字的行（可能是序号）
-    if (/^\d/.test(line)) continue;
+    // 尝试匹配多种格式
 
-    // 尝试匹配简化格式：单词 + 任意分隔符 + 中文词义
+    // 格式1：填空格式（带下划线）
+    // 例如：1.________['ɑ:ftə] prep.在…之后
+    // 匹配：数字 + . + 下划线 + 音标 + 词性 + 中文
+    const fillBlankMatch = line.match(/^\d+\.\s*_+([^_]*)/);
+    if (fillBlankMatch) {
+      // 提取下划线后面的内容
+      const content = fillBlankMatch[1].trim();
+      console.log('[wordFileProcessor] 检测到填空格式:', content);
+
+      // 从内容中提取单词信息
+      const wordInfo = extractWordInfo(content);
+      if (wordInfo) {
+        words.push(wordInfo);
+      }
+      continue;
+    }
+
+    // 格式2：带序号格式（标准格式）
+    // 例如：1. after ['ɑ:ftə] prep.在…之后
+    const numberedMatch = line.match(/^\d+\.\s*(.+)/);
+    if (numberedMatch) {
+      const content = numberedMatch[1].trim();
+      console.log('[wordFileProcessor] 检测到序号格式:', content);
+
+      const wordInfo = extractWordInfo(content);
+      if (wordInfo) {
+        words.push(wordInfo);
+      }
+      continue;
+    }
+
+    // 格式3：简化格式：单词 + 任意分隔符 + 中文词义
     // 支持的分隔符：空格、制表符、-、：、: 、、、. ，，
     const match = line.match(/^([a-zA-Z]+)[\s\t\-：:：、.,，]+([\u4e00-\u9fa5\s\w\p{P}]+)$/u);
 
@@ -113,6 +143,92 @@ export function extractWordsFromText(text: string): WordData[] {
   });
 
   return words;
+}
+
+/**
+ * 从一行内容中提取单词信息
+ * 支持格式：
+ * - word ['ipa'] pos.中文
+ * - word [ipa] 中文
+ * - word pos.中文
+ * - word 中文
+ */
+function extractWordInfo(content: string): WordData | null {
+  // 格式1：word ['ipa'] pos.中文
+  const match1 = content.match(/^([a-zA-Z]+)\s*\[([^\]]+)\]\s*(n\.|v\.|adj\.|adv\.|prep\.|pron\.|conj\.|num\.|art\.|interj\.)\s*([\u4e00-\u9fa5\s\w\p{P}]+)$/u);
+  if (match1) {
+    const [, word, pronunciation, partOfSpeech, definition] = match1;
+    return {
+      word: word.toLowerCase(),
+      pronunciation: pronunciation.trim(),
+      partOfSpeech: partOfSpeech.trim(),
+      definition: definition.trim(),
+    };
+  }
+
+  // 格式2：word ['ipa'] 中文（无词性）
+  const match2 = content.match(/^([a-zA-Z]+)\s*\[([^\]]+)\]\s*([\u4e00-\u9fa5\s\w\p{P}]+)$/u);
+  if (match2) {
+    const [, word, pronunciation, definition] = match2;
+    return {
+      word: word.toLowerCase(),
+      pronunciation: pronunciation.trim(),
+      definition: definition.trim(),
+    };
+  }
+
+  // 格式3：word pos.中文（无音标）
+  const match3 = content.match(/^([a-zA-Z]+)\s*(n\.|v\.|adj\.|adv\.|prep\.|pron\.|conj\.|num\.|art\.|interj\.)\s*([\u4e00-\u9fa5\s\w\p{P}]+)$/u);
+  if (match3) {
+    const [, word, partOfSpeech, definition] = match3;
+    return {
+      word: word.toLowerCase(),
+      partOfSpeech: partOfSpeech.trim(),
+      definition: definition.trim(),
+    };
+  }
+
+  // 格式4：word 中文（只有单词和中文）
+  const match4 = content.match(/^([a-zA-Z]+)\s+([\u4e00-\u9fa5\s\w\p{P}]+)$/u);
+  if (match4) {
+    const [, word, definition] = match4;
+    return {
+      word: word.toLowerCase(),
+      definition: definition.trim(),
+    };
+  }
+
+  // 格式5：word pos.中文（词性可能是中英文混合）
+  const match5 = content.match(/^([a-zA-Z]+)\s*([^\s]+)\s*([\u4e00-\u9fa5\s\w\p{P}]+)$/u);
+  if (match5) {
+    const [, word, posOrDef, definition] = match5;
+    // 检查第二部分是否是词性
+    const isPartOfSpeech = /^n\.|v\.|adj\.|adv\.|prep\.|pron\.|conj\.|num\.|art\.|interj\.$/.test(posOrDef);
+
+    if (isPartOfSpeech && definition) {
+      return {
+        word: word.toLowerCase(),
+        partOfSpeech: posOrDef.trim(),
+        definition: definition.trim(),
+      };
+    } else if (posOrDef && /[\u4e00-\u9fa5]/.test(posOrDef)) {
+      // 如果第二部分是中文，作为词义
+      return {
+        word: word.toLowerCase(),
+        definition: (posOrDef + ' ' + (definition || '')).trim(),
+      };
+    }
+  }
+
+  // 尝试提取第一个英文单词
+  const firstWordMatch = content.match(/^([a-zA-Z]+)/);
+  if (firstWordMatch && firstWordMatch[1].length > 1) {
+    return {
+      word: firstWordMatch[1].toLowerCase(),
+    };
+  }
+
+  return null;
 }
 
 /**
