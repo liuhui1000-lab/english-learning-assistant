@@ -225,8 +225,8 @@ async function importWordFormations(
       // 插入词转练习
       await query(
         `
-        INSERT INTO word_transformations (id, base_word, base_meaning, transformations, difficulty, source_type, source_info, created_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
+        INSERT INTO word_transformations (id, base_word, base_meaning, transformations, grade, difficulty, source_type, source_info, created_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
         ON CONFLICT DO NOTHING
         `,
         [
@@ -234,6 +234,7 @@ async function importWordFormations(
           question.baseWord || '',
           '', // 基础词义，需要后续补充
           JSON.stringify(transformations),
+          grade, // 年级
           2, // 初二难度
           'exam', // 来源：模拟卷
           `${grade} - 模拟卷${version}`, // 年级和版本信息

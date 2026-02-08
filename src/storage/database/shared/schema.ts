@@ -9,12 +9,14 @@ export const wordFamilies = pgTable("word_families", {
     id: varchar({ length: 36 }).default(sql`gen_random_uuid()`).primaryKey().notNull(),
     baseWord: varchar("base_word", { length: 100 }).notNull(),
     familyName: varchar("family_name", { length: 100 }).notNull(),
+    grade: varchar({ length: 20 }).default('8年级'), // '6年级' | '7年级' | '8年级' | '9年级'
     sourceType: varchar("source_type", { length: 20 }).default('list').notNull(), // 'list' | 'exam' | 'mistake'
     sourceInfo: varchar("source_info", { length: 200 }), // '6年级清单' | '2025年模拟卷A' | '错题收集'
     difficulty: integer().default(1),
     createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
     index("word_families_base_word_idx").using("btree", table.baseWord.asc().nullsLast().op("text_ops")),
+    index("word_families_grade_idx").using("btree", table.grade.asc().nullsLast().op("text_ops")),
     index("word_families_source_type_idx").using("btree", table.sourceType.asc().nullsLast().op("text_ops")),
 ])
 
@@ -26,12 +28,14 @@ export const collocations = pgTable("collocations", {
         example: text(),
         exampleTranslation: text("example_translation"),
         category: varchar({ length: 50 }),
+        grade: varchar({ length: 20 }).default('8年级'), // '6年级' | '7年级' | '8年级' | '9年级'
         difficulty: integer().default(1),
         sourceType: varchar("source_type", { length: 20 }).default('list').notNull(), // 'list' | 'exam' | 'mistake'
         sourceInfo: varchar("source_info", { length: 200 }), // '6年级清单' | '2025年模拟卷A'
         createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
         index("collocations_phrase_idx").using("btree", table.phrase.asc().nullsLast().op("text_ops")),
+        index("collocations_grade_idx").using("btree", table.grade.asc().nullsLast().op("text_ops")),
 ]);
 
 export const grammarPoints = pgTable("grammar_points", {
@@ -109,11 +113,13 @@ export const words = pgTable("words", {
         meaning: text().notNull(),
         example: text(),
         exampleTranslation: text("example_translation"),
+        grade: varchar({ length: 20 }).default('8年级'), // '6年级' | '7年级' | '8年级' | '9年级'
         difficulty: integer().default(1),
         createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
         index("words_word_idx").using("btree", table.word.asc().nullsLast().op("text_ops")),
         index("words_word_family_id_idx").using("btree", table.wordFamilyId.asc().nullsLast().op("text_ops")),
+        index("words_grade_idx").using("btree", table.grade.asc().nullsLast().op("text_ops")),
         unique("words_word_unique").on(table.word),
         foreignKey({
                         columns: [table.wordFamilyId],
@@ -168,12 +174,14 @@ export const wordTransformations = pgTable("word_transformations", {
         baseWord: varchar("base_word", { length: 100 }).notNull(),
         baseMeaning: text("base_meaning").notNull(),
         transformations: jsonb().notNull(),
+        grade: varchar({ length: 20 }).default('8年级'), // '6年级' | '7年级' | '8年级' | '9年级'
         difficulty: integer().default(1),
         sourceType: varchar("source_type", { length: 20 }).default('list').notNull(), // 'list' | 'exam' | 'mistake'
         sourceInfo: varchar("source_info", { length: 200 }), // '6年级清单' | '2025年模拟卷A'
         createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
         index("word_transformations_base_word_idx").using("btree", table.baseWord.asc().nullsLast().op("text_ops")),
+        index("word_transformations_grade_idx").using("btree", table.grade.asc().nullsLast().op("text_ops")),
         index("word_transformations_word_family_id_idx").using("btree", table.wordFamilyId.asc().nullsLast().op("text_ops")),
         foreignKey({
                         columns: [table.wordFamilyId],
