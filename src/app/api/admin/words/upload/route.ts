@@ -87,6 +87,8 @@ export async function POST(request: NextRequest) {
     // 如果规则解析失败或结果为空，尝试 AI 解析
     if (parsedWords.length === 0) {
       console.log('[单词上传] 规则解析失败，尝试 AI 智能解析');
+      console.log('[单词上传] 文本内容长度:', text.length);
+      console.log('[单词上传] 文本内容预览（前200字符）:', text.substring(0, 200));
 
       try {
         const aiResult = await fetch('/api/admin/ai/parse-words', {
@@ -98,15 +100,24 @@ export async function POST(request: NextRequest) {
           }),
         });
 
+        console.log('[单词上传] AI 响应状态:', aiResult.status);
+
         if (aiResult.ok) {
           const aiData = await aiResult.json();
+          console.log('[单词上传] AI 响应数据:', JSON.stringify(aiData).substring(0, 500));
+
           if (aiData.success && aiData.data && aiData.data.words) {
             parsedWords = aiData.data.words;
             console.log('[单词上传] AI 解析成功，解析到', parsedWords.length, '个单词');
+          } else {
+            console.error('[单词上传] AI 解析返回了数据，但格式不正确:', aiData);
           }
+        } else {
+          const errorText = await aiResult.text();
+          console.error('[单词上传] AI 解析失败，状态码:', aiResult.status, '响应:', errorText);
         }
       } catch (error) {
-        console.error('[单词上传] AI 解析失败:', error);
+        console.error('[单词上传] AI 解析异常:', error);
         // AI 解析失败，继续返回规则解析的错误
       }
     }
@@ -115,11 +126,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: '未能从文档中解析出单词',
+          details: {
+            fileContentLength: text.length,
+            fileContentPreview: text.substring(0, 200),
+          },
           suggestions: [
             '请检查文件内容是否包含英语单词',
             '请尝试使用更简单的格式（如：adventure - 冒险）',
             '请确保 AI 提供商已正确配置',
-            '请检查网络连接是否正常'
+            '请检查网络连接是否正常',
+            '请查看日志了解详细错误信息'
           ]
         },
         { status: 400 }
