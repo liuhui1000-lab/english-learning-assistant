@@ -13,7 +13,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { parseWordDocument } from '@/utils/wordParser';
 import { parseFile, getSupportedFormats, isFormatSupported } from '@/utils/fileParser';
-import { getDb } from 'coze-coding-dev-sdk';
+import { getDb } from '@/utils/db';
 import { words } from '@/storage/database/shared/schema';
 import { eq, sql } from 'drizzle-orm';
 import { checkPermission } from '@/utils/auth';
