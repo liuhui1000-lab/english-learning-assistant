@@ -62,18 +62,10 @@ export function extractWordsFromText(text: string): WordData[] {
 
     // 格式1：填空格式（带下划线）
     // 例如：1.________['ɑ:ftə] prep.在…之后
-    // 匹配：数字 + . + 下划线 + 音标 + 词性 + 中文
-    const fillBlankMatch = line.match(/^\d+\.\s*_+([^_]*)/);
+    // 注意：填空格式没有单词信息，直接跳过
+    const fillBlankMatch = line.match(/^\d+\.\s*_+/);
     if (fillBlankMatch) {
-      // 提取下划线后面的内容
-      const content = fillBlankMatch[1].trim();
-      console.log('[wordFileProcessor] 检测到填空格式:', content);
-
-      // 从内容中提取单词信息
-      const wordInfo = extractWordInfo(content);
-      if (wordInfo) {
-        words.push(wordInfo);
-      }
+      // 跳过填空格式，等待后面完整清单
       continue;
     }
 
@@ -85,7 +77,7 @@ export function extractWordsFromText(text: string): WordData[] {
       console.log('[wordFileProcessor] 检测到序号格式:', content);
 
       const wordInfo = extractWordInfo(content);
-      if (wordInfo) {
+      if (wordInfo && wordInfo.word) {
         words.push(wordInfo);
       }
       continue;
@@ -152,54 +144,55 @@ export function extractWordsFromText(text: string): WordData[] {
  * - word [ipa] 中文
  * - word pos.中文
  * - word 中文
+ * - 支持词组（多个单词）
  */
 function extractWordInfo(content: string): WordData | null {
-  // 格式1：word ['ipa'] pos.中文
-  const match1 = content.match(/^([a-zA-Z]+)\s*\[([^\]]+)\]\s*(n\.|v\.|adj\.|adv\.|prep\.|pron\.|conj\.|num\.|art\.|interj\.)\s*([\u4e00-\u9fa5\s\w\p{P}]+)$/u);
+  // 格式1：word ['ipa'] pos.中文（支持词组）
+  const match1 = content.match(/^([a-zA-Z\s\-']+)\s*\[([^\]]+)\]\s*(n\.|v\.|adj\.|adv\.|prep\.|pron\.|conj\.|num\.|art\.|interj\.)\s*([\u4e00-\u9fa5\s\w\p{P}]+)$/u);
   if (match1) {
     const [, word, pronunciation, partOfSpeech, definition] = match1;
     return {
-      word: word.toLowerCase(),
+      word: word.trim().toLowerCase(),
       pronunciation: pronunciation.trim(),
       partOfSpeech: partOfSpeech.trim(),
       definition: definition.trim(),
     };
   }
 
-  // 格式2：word ['ipa'] 中文（无词性）
-  const match2 = content.match(/^([a-zA-Z]+)\s*\[([^\]]+)\]\s*([\u4e00-\u9fa5\s\w\p{P}]+)$/u);
+  // 格式2：word ['ipa'] 中文（无词性，支持词组）
+  const match2 = content.match(/^([a-zA-Z\s\-']+)\s*\[([^\]]+)\]\s*([\u4e00-\u9fa5\s\w\p{P}]+)$/u);
   if (match2) {
     const [, word, pronunciation, definition] = match2;
     return {
-      word: word.toLowerCase(),
+      word: word.trim().toLowerCase(),
       pronunciation: pronunciation.trim(),
       definition: definition.trim(),
     };
   }
 
-  // 格式3：word pos.中文（无音标）
-  const match3 = content.match(/^([a-zA-Z]+)\s*(n\.|v\.|adj\.|adv\.|prep\.|pron\.|conj\.|num\.|art\.|interj\.)\s*([\u4e00-\u9fa5\s\w\p{P}]+)$/u);
+  // 格式3：word pos.中文（无音标，支持词组）
+  const match3 = content.match(/^([a-zA-Z\s\-']+)\s*(n\.|v\.|adj\.|adv\.|prep\.|pron\.|conj\.|num\.|art\.|interj\.)\s*([\u4e00-\u9fa5\s\w\p{P}]+)$/u);
   if (match3) {
     const [, word, partOfSpeech, definition] = match3;
     return {
-      word: word.toLowerCase(),
+      word: word.trim().toLowerCase(),
       partOfSpeech: partOfSpeech.trim(),
       definition: definition.trim(),
     };
   }
 
-  // 格式4：word 中文（只有单词和中文）
-  const match4 = content.match(/^([a-zA-Z]+)\s+([\u4e00-\u9fa5\s\w\p{P}]+)$/u);
+  // 格式4：word 中文（只有单词和中文，支持词组）
+  const match4 = content.match(/^([a-zA-Z\s\-']+)\s+([\u4e00-\u9fa5\s\w\p{P}]+)$/u);
   if (match4) {
     const [, word, definition] = match4;
     return {
-      word: word.toLowerCase(),
+      word: word.trim().toLowerCase(),
       definition: definition.trim(),
     };
   }
 
-  // 格式5：word pos.中文（词性可能是中英文混合）
-  const match5 = content.match(/^([a-zA-Z]+)\s*([^\s]+)\s*([\u4e00-\u9fa5\s\w\p{P}]+)$/u);
+  // 格式5：word pos.中文（词性可能是中英文混合，支持词组）
+  const match5 = content.match(/^([a-zA-Z\s\-']+)\s*([^\s]+)\s*([\u4e00-\u9fa5\s\w\p{P}]+)$/u);
   if (match5) {
     const [, word, posOrDef, definition] = match5;
     // 检查第二部分是否是词性
@@ -207,25 +200,44 @@ function extractWordInfo(content: string): WordData | null {
 
     if (isPartOfSpeech && definition) {
       return {
-        word: word.toLowerCase(),
+        word: word.trim().toLowerCase(),
         partOfSpeech: posOrDef.trim(),
         definition: definition.trim(),
       };
     } else if (posOrDef && /[\u4e00-\u9fa5]/.test(posOrDef)) {
       // 如果第二部分是中文，作为词义
       return {
-        word: word.toLowerCase(),
+        word: word.trim().toLowerCase(),
         definition: (posOrDef + ' ' + (definition || '')).trim(),
       };
     }
   }
 
-  // 尝试提取第一个英文单词
-  const firstWordMatch = content.match(/^([a-zA-Z]+)/);
-  if (firstWordMatch && firstWordMatch[1].length > 1) {
+  // 格式6：纯英文单词或词组
+  const pureWordMatch = content.match(/^([a-zA-Z\s\-']+)$/);
+  if (pureWordMatch && pureWordMatch[1].trim().length > 1) {
     return {
-      word: firstWordMatch[1].toLowerCase(),
+      word: pureWordMatch[1].trim().toLowerCase(),
     };
+  }
+
+  // 尝试提取第一个英文单词或词组（直到遇到中文字符）
+  const firstWordMatch = content.match(/^([a-zA-Z\s\-']+)/);
+  if (firstWordMatch && firstWordMatch[1].trim().length > 1) {
+    // 提取后面的中文部分
+    const rest = content.substring(firstWordMatch[0].length);
+    const chinesePart = rest.replace(/^[^\u4e00-\u9fa5]+/, '').trim();
+
+    if (chinesePart.length > 0) {
+      return {
+        word: firstWordMatch[1].trim().toLowerCase(),
+        definition: chinesePart,
+      };
+    } else {
+      return {
+        word: firstWordMatch[1].trim().toLowerCase(),
+      };
+    }
   }
 
   return null;
