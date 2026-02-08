@@ -345,6 +345,9 @@ export async function uploadWordsInBatches(
         status: 'error',
         error: error instanceof Error ? error.message : '未知错误',
       });
+
+      // 严重错误：停止上传
+      throw error;
     }
   }
 
