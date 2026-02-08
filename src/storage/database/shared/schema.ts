@@ -413,6 +413,107 @@ export const userGrammarProgress = pgTable("user_grammar_progress", {
     }).onDelete("cascade"),
 ]);
 
+// ============================================================
+// 模拟卷和错题去重系统（策略 2：来源追踪）
+// ============================================================
+
+// 题目表（去重后的题目）
+export const questions = pgTable("questions", {
+    id: varchar({ length: 36 }).default(sql`gen_random_uuid()`).primaryKey().notNull(),
+    questionHash: varchar("question_hash", { length: 32 }).notNull().unique(), // 内容哈希，用于去重
+    question: text().notNull(),
+    type: varchar({ length: 20 }).notNull(), // 'grammar' | 'word_formation' | 'reading'
+    options: jsonb(), // 选项 JSON
+    correctAnswer: text("correct_answer").notNull(),
+    explanation: text(),
+    difficulty: integer().default(1), // 1: easy, 2: medium, 3: hard
+    createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    firstSeenAt: timestamp("first_seen_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(), // 首次出现时间
+    appearanceCount: integer("appearance_count").default(1).notNull(), // 出现次数（在不同试卷中）
+}, (table) => [
+    index("questions_question_hash_idx").using("btree", table.questionHash.asc().nullsLast().op("text_ops")),
+    index("questions_type_idx").using("btree", table.type.asc().nullsLast().op("text_ops")),
+    index("questions_difficulty_idx").using("btree", table.difficulty.asc().nullsLast().op("int4_ops")),
+    index("questions_first_seen_at_idx").using("btree", table.firstSeenAt.desc().nullsLast().op("timestamptz_ops")),
+    index("questions_appearance_count_idx").using("btree", table.appearanceCount.desc().nullsLast().op("int4_ops")),
+]);
+
+// 试卷表
+export const examPapers = pgTable("exam_papers", {
+    id: varchar({ length: 36 }).default(sql`gen_random_uuid()`).primaryKey().notNull(),
+    name: varchar({ length: 200 }).notNull(), // '模拟卷A' | '2024年期末测试卷'
+    version: varchar({ length: 50 }), // 'v1.0'
+    grade: varchar({ length: 20 }), // '6年级' | '7年级' | '8年级' | '9年级'
+    semester: varchar({ length: 10 }), // '上学期' | '下学期'
+    uploadTime: timestamp("upload_time", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+    fileName: varchar("file_name", { length: 200 }).notNull(), // '模拟卷A.docx'
+    questionCount: integer("question_count").default(0).notNull(),
+    uploadedBy: varchar("uploaded_by", { length: 100 }), // 上传者用户 ID
+}, (table) => [
+    index("exam_papers_name_idx").using("btree", table.name.asc().nullsLast().op("text_ops")),
+    index("exam_papers_grade_idx").using("btree", table.grade.asc().nullsLast().op("text_ops")),
+    index("exam_papers_semester_idx").using("btree", table.semester.asc().nullsLast().op("text_ops")),
+    index("exam_papers_upload_time_idx").using("btree", table.uploadTime.desc().nullsLast().op("timestamptz_ops")),
+]);
+
+// 题目-试卷关联表（多对多关系）
+export const questionPaperRelations = pgTable("question_paper_relations", {
+    id: varchar({ length: 36 }).default(sql`gen_random_uuid()`).primaryKey().notNull(),
+    questionId: varchar("question_id", { length: 36 }).notNull(),
+    paperId: varchar("paper_id", { length: 36 }).notNull(),
+    questionNumber: varchar("question_number", { length: 20 }), // 在试卷中的题号，如 '1', '2', '3'
+    uploadTime: timestamp("upload_time", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+    index("question_paper_relations_question_id_idx").using("btree", table.questionId.asc().nullsLast().op("text_ops")),
+    index("question_paper_relations_paper_id_idx").using("btree", table.paperId.asc().nullsLast().op("text_ops")),
+    index("question_paper_relations_upload_time_idx").using("btree", table.uploadTime.desc().nullsLast().op("timestamptz_ops")),
+    unique("question_paper_relations_question_paper_unique").on(table.questionId, table.paperId), // 同一题目在同一试卷中不重复
+    foreignKey({
+        columns: [table.questionId],
+        foreignColumns: [questions.id],
+        name: "question_paper_relations_question_id_questions_id_fk"
+    }).onDelete("cascade"),
+    foreignKey({
+        columns: [table.paperId],
+        foreignColumns: [examPapers.id],
+        name: "question_paper_relations_paper_id_exam_papers_id_fk"
+    }).onDelete("cascade"),
+]);
+
+// 学生错题记录表
+export const studentMistakes = pgTable("student_mistakes", {
+    id: varchar({ length: 36 }).default(sql`gen_random_uuid()`).primaryKey().notNull(),
+    userId: varchar("user_id", { length: 100 }).notNull(),
+    questionId: varchar("question_id", { length: 36 }).notNull(),
+    paperId: varchar("paper_id", { length: 36 }), // 可选，记录来自哪份试卷
+    wrongAnswer: text("wrong_answer"), // 学生的错误答案
+    attemptCount: integer("attempt_count").default(1).notNull(), // 尝试次数
+    firstWrongAt: timestamp("first_wrong_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(), // 首次做错时间
+    lastWrongAt: timestamp("last_wrong_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(), // 最后做错时间
+    mastered: boolean().default(false).notNull(), // 是否已掌握
+    lastCorrectAt: timestamp("last_correct_at", { withTimezone: true, mode: 'string' }), // 最后做对时间
+    consecutiveCorrect: integer("consecutive_correct").default(0).notNull(), // 连续正确次数
+    notes: text(), // 学生笔记
+}, (table) => [
+    index("student_mistakes_user_id_idx").using("btree", table.userId.asc().nullsLast().op("text_ops")),
+    index("student_mistakes_question_id_idx").using("btree", table.questionId.asc().nullsLast().op("text_ops")),
+    index("student_mistakes_paper_id_idx").using("btree", table.paperId.asc().nullsLast().op("text_ops")),
+    index("student_mistakes_mastered_idx").using("btree", table.mastered.asc().nullsLast().op("bool_ops")),
+    index("student_mistakes_last_wrong_at_idx").using("btree", table.lastWrongAt.desc().nullsLast().op("timestamptz_ops")),
+    index("student_mistakes_user_question_unique").using("btree", sql`${table.userId}, ${table.questionId}`),
+    foreignKey({
+        columns: [table.questionId],
+        foreignColumns: [questions.id],
+        name: "student_mistakes_question_id_questions_id_fk"
+    }).onDelete("cascade"),
+    foreignKey({
+        columns: [table.paperId],
+        foreignColumns: [examPapers.id],
+        name: "student_mistakes_paper_id_exam_papers_id_fk"
+    }).onDelete("set null"),
+]);
+
 // Zod Schemas for validation
 
 export const insertWordSchema = createInsertSchema(words)
@@ -520,3 +621,24 @@ export const insertUserGrammarProgressSchema = createInsertSchema(userGrammarPro
 export const selectUserGrammarProgressSchema = createSelectSchema(userGrammarProgress)
 export type InsertUserGrammarProgress = z.infer<typeof insertUserGrammarProgressSchema>
 export type UserGrammarProgress = typeof userGrammarProgress.$inferSelect
+
+// 模拟卷和错题去重系统 schemas
+export const insertQuestionSchema = createInsertSchema(questions)
+export const selectQuestionSchema = createSelectSchema(questions)
+export type InsertQuestion = z.infer<typeof insertQuestionSchema>
+export type Question = typeof questions.$inferSelect
+
+export const insertExamPaperSchema = createInsertSchema(examPapers)
+export const selectExamPaperSchema = createSelectSchema(examPapers)
+export type InsertExamPaper = z.infer<typeof insertExamPaperSchema>
+export type ExamPaper = typeof examPapers.$inferSelect
+
+export const insertQuestionPaperRelationSchema = createInsertSchema(questionPaperRelations)
+export const selectQuestionPaperRelationSchema = createSelectSchema(questionPaperRelations)
+export type InsertQuestionPaperRelation = z.infer<typeof insertQuestionPaperRelationSchema>
+export type QuestionPaperRelation = typeof questionPaperRelations.$inferSelect
+
+export const insertStudentMistakeSchema = createInsertSchema(studentMistakes)
+export const selectStudentMistakeSchema = createSelectSchema(studentMistakes)
+export type InsertStudentMistake = z.infer<typeof insertStudentMistakeSchema>
+export type StudentMistake = typeof studentMistakes.$inferSelect
