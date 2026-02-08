@@ -35,7 +35,6 @@ export interface GrammarPointMergeResult extends MergeResult {
     description?: string;
     examples?: string[];
     source?: string;
-    updatedAt?: Date;
   };
 }
 
@@ -49,7 +48,6 @@ export interface CollocationMergeResult extends MergeResult {
     meaning?: string;
     example?: string;
     source?: string;
-    updatedAt?: Date;
   };
 }
 
@@ -92,7 +90,6 @@ export async function applyGrammarPointMergeStrategy(
             description: newItem.description || existingItem.description,
             examples: newItem.examples || existingItem.examples,
             source: newItem.source || existingItem.source,
-            updatedAt: new Date(),
           },
           reason: '已使用新内容替换原有内容',
         };
@@ -111,7 +108,6 @@ export async function applyGrammarPointMergeStrategy(
               ),
             ],
             source: `${existingItem.source || ''}, ${newItem.source || ''}`,
-            updatedAt: new Date(),
           },
           reason: '已将新内容追加到原有内容',
         };
@@ -158,7 +154,6 @@ export async function applyCollocationMergeStrategy(
     meaning?: string;
     example?: string;
     source?: string;
-    updatedAt?: Date;
   },
   newItem: {
     phrase: string;
@@ -179,7 +174,6 @@ export async function applyCollocationMergeStrategy(
             meaning: newItem.meaning || existingItem.meaning,
             example: newItem.example || existingItem.example,
             source: newItem.source || existingItem.source,
-            updatedAt: new Date(),
           },
           reason: '已使用新内容替换原有内容',
         };
@@ -192,7 +186,6 @@ export async function applyCollocationMergeStrategy(
             meaning: existingItem.meaning || newItem.meaning,
             example: existingItem.example || newItem.example,
             source: `${existingItem.source || ''}, ${newItem.source || ''}`,
-            updatedAt: new Date(),
           },
           reason: '已将新内容追加到原有内容',
         };
@@ -296,7 +289,6 @@ async function smartMergeGrammarPoint(
             ),
           ],
           source: `${existingItem.source || ''}, ${newItem.source || ''}`,
-          updatedAt: new Date(),
         },
         reason: 'AI 合并失败，降级使用追加策略',
       };
@@ -314,7 +306,6 @@ async function smartMergeGrammarPoint(
           ...(newItem.examples || []),
         ],
         source: `${existingItem.source || ''}, ${newItem.source || ''}`,
-        updatedAt: new Date(),
       },
       reason: result.reason || 'AI 智能合并成功',
     };
@@ -334,7 +325,6 @@ async function smartMergeGrammarPoint(
           ),
         ],
         source: `${existingItem.source || ''}, ${newItem.source || ''}`,
-        updatedAt: new Date(),
       },
       reason: 'AI 合并失败，降级使用追加策略',
     };
@@ -402,7 +392,6 @@ async function smartMergeCollocation(
           meaning: existingItem.meaning || newItem.meaning,
           example: existingItem.example || newItem.example,
           source: `${existingItem.source || ''}, ${newItem.source || ''}`,
-          updatedAt: new Date(),
         },
         reason: 'AI 合并失败，降级使用追加策略',
       };
@@ -416,7 +405,6 @@ async function smartMergeCollocation(
         meaning: result.meaning || existingItem.meaning || newItem.meaning,
         example: result.example || existingItem.example || newItem.example,
         source: `${existingItem.source || ''}, ${newItem.source || ''}`,
-        updatedAt: new Date(),
       },
       reason: result.reason || 'AI 智能合并成功',
     };
@@ -430,7 +418,6 @@ async function smartMergeCollocation(
         meaning: existingItem.meaning || newItem.meaning,
         example: existingItem.example || newItem.example,
         source: `${existingItem.source || ''}, ${newItem.source || ''}`,
-        updatedAt: new Date(),
       },
       reason: 'AI 合并失败，降级使用追加策略',
     };

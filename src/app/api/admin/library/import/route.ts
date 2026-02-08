@@ -402,7 +402,7 @@ async function processImport(
               if (mergeResult.success && mergeStrategy !== MergeStrategy.SKIP) {
                 await query(
                   `UPDATE grammarPoints
-                   SET name = $1, category = $2, description = $3, examples = $4, updatedAt = NOW()
+                   SET name = $1, category = $2, description = $3, examples = $4
                    WHERE id = $5`,
                   [mergeResult.mergedItem.name,
                    mergeResult.mergedItem.category,
@@ -461,7 +461,7 @@ async function processImport(
                 if (mergeResult.success && mergeStrategy !== MergeStrategy.SKIP) {
                   await query(
                     `UPDATE grammarPoints
-                     SET name = $1, category = $2, description = $3, examples = $4, updatedAt = NOW()
+                     SET name = $1, category = $2, description = $3, examples = $4
                      WHERE id = $5`,
                     [mergeResult.mergedItem.name,
                      mergeResult.mergedItem.category,
@@ -534,7 +534,7 @@ async function processImport(
                 if (mergeResult.success && mergeStrategy !== MergeStrategy.SKIP) {
                   await query(
                     `UPDATE collocations
-                     SET phrase = $1, meaning = $2, example = $3, updatedAt = NOW()
+                     SET phrase = $1, meaning = $2, example = $3
                      WHERE id = $4`,
                     [mergeResult.mergedItem.phrase,
                      mergeResult.mergedItem.meaning,
@@ -606,7 +606,7 @@ async function processImport(
                   if (mergeResult.success && mergeStrategy !== MergeStrategy.SKIP) {
                     await query(
                       `UPDATE collocations
-                       SET phrase = $1, meaning = $2, example = $3, updatedAt = NOW()
+                       SET phrase = $1, meaning = $2, example = $3
                        WHERE id = $4`,
                       [mergeResult.mergedItem.phrase,
                        mergeResult.mergedItem.meaning,
