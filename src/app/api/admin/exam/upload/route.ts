@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
     // 保存到不同的模块
     const results = {
       grammar: await importGrammarExercises(groupedQuestions.grammar, version, grade),
-      wordFormation: await importWordFormations(groupedQuestions.wordFormation, version, grade),
+      wordFormation: await importWordFormations(groupedQuestions.wordFormation, version),
       reading: await importReadingComprehensions(groupedQuestions.reading, version, grade),
     };
 
@@ -203,8 +203,7 @@ async function importGrammarExercises(
  */
 async function importWordFormations(
   questions: Question[],
-  version: string,
-  grade: string
+  version: string
 ): Promise<{ success: number; failed: number }> {
   const db = await getDb();
   let success = 0;
@@ -225,8 +224,8 @@ async function importWordFormations(
       // 插入词转练习
       await query(
         `
-        INSERT INTO word_transformations (id, base_word, base_meaning, transformations, grade, difficulty, source_type, source_info, created_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
+        INSERT INTO word_transformations (id, base_word, base_meaning, transformations, difficulty, source_type, source_info, created_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
         ON CONFLICT DO NOTHING
         `,
         [
@@ -234,10 +233,9 @@ async function importWordFormations(
           question.baseWord || '',
           '', // 基础词义，需要后续补充
           JSON.stringify(transformations),
-          grade, // 年级
           2, // 初二难度
           'exam', // 来源：模拟卷
-          `${grade} - 模拟卷${version}`, // 年级和版本信息
+          `模拟卷${version}`, // 版本信息（词转贯穿初中，不需要年级）
         ]
       );
 

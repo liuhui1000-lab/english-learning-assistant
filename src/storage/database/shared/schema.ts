@@ -28,14 +28,12 @@ export const collocations = pgTable("collocations", {
         example: text(),
         exampleTranslation: text("example_translation"),
         category: varchar({ length: 50 }),
-        grade: varchar({ length: 20 }).default('8年级'), // '6年级' | '7年级' | '8年级' | '9年级'
         difficulty: integer().default(1),
         sourceType: varchar("source_type", { length: 20 }).default('list').notNull(), // 'list' | 'exam' | 'mistake'
         sourceInfo: varchar("source_info", { length: 200 }), // '6年级清单' | '2025年模拟卷A'
         createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
         index("collocations_phrase_idx").using("btree", table.phrase.asc().nullsLast().op("text_ops")),
-        index("collocations_grade_idx").using("btree", table.grade.asc().nullsLast().op("text_ops")),
 ]);
 
 export const grammarPoints = pgTable("grammar_points", {
@@ -174,14 +172,12 @@ export const wordTransformations = pgTable("word_transformations", {
         baseWord: varchar("base_word", { length: 100 }).notNull(),
         baseMeaning: text("base_meaning").notNull(),
         transformations: jsonb().notNull(),
-        grade: varchar({ length: 20 }).default('8年级'), // '6年级' | '7年级' | '8年级' | '9年级'
         difficulty: integer().default(1),
         sourceType: varchar("source_type", { length: 20 }).default('list').notNull(), // 'list' | 'exam' | 'mistake'
         sourceInfo: varchar("source_info", { length: 200 }), // '6年级清单' | '2025年模拟卷A'
         createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
         index("word_transformations_base_word_idx").using("btree", table.baseWord.asc().nullsLast().op("text_ops")),
-        index("word_transformations_grade_idx").using("btree", table.grade.asc().nullsLast().op("text_ops")),
         index("word_transformations_word_family_id_idx").using("btree", table.wordFamilyId.asc().nullsLast().op("text_ops")),
         foreignKey({
                         columns: [table.wordFamilyId],
