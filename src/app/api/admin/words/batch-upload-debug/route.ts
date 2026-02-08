@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { checkPermission } from '@/utils/auth';
 import { getDb } from '@/utils/db';
-import { inArray } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 import { words } from '@/storage/database/shared/schema';
 
 export const dynamic = 'force-dynamic';
@@ -56,10 +56,9 @@ export async function POST(request: NextRequest) {
     console.log('[批量上传调试] 查询单词列表:', allWordsLower.slice(0, 5));
 
     // 使用原生 SQL 查询，因为需要 LOWER() 函数
-    const existingWordsResult = await db.execute(`
-      SELECT * FROM words
-      WHERE LOWER(word) = ANY($1)
-    `, [allWordsLower]);
+    const existingWordsResult = await db.execute(
+      sql`SELECT * FROM words WHERE LOWER(word) = ANY(${allWordsLower})`
+    );
 
     console.log('[批量上传调试] 已存在单词数:', existingWordsResult.rows.length);
     if (existingWordsResult.rows.length > 0) {

@@ -59,10 +59,9 @@ export async function POST(request: NextRequest) {
     console.log(`[批量上传] 单词列表:`, allWordsLower.slice(0, 10));
 
     // 使用原生 SQL 查询，因为需要 LOWER() 函数
-    const existingWordsResult = await db.execute(`
-      SELECT * FROM words
-      WHERE LOWER(word) = ANY($1)
-    `, [allWordsLower]);
+    const existingWordsResult = await db.execute(
+      sql`SELECT * FROM words WHERE LOWER(word) = ANY(${allWordsLower})`
+    );
 
     console.log(`[批量上传] 查询结果: 已存在 ${existingWordsResult.rows.length} 个单词`);
     if (existingWordsResult.rows.length > 0) {
