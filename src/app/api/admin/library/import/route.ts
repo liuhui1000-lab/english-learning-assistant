@@ -40,21 +40,46 @@ export async function POST(request: NextRequest) {
 
     // 验证文件类型
     const fileExt = file.name.split('.').pop()?.toLowerCase();
-    if (!['json', 'csv'].includes(fileExt || '')) {
+    const supportedFormats = ['json', 'csv', 'txt', 'md', 'docx', 'pdf'];
+
+    if (!supportedFormats.includes(fileExt || '')) {
       return NextResponse.json(
-        { error: '仅支持 JSON 和 CSV 格式文件' },
+        { error: `仅支持 ${supportedFormats.join(', ').toUpperCase()} 格式文件` },
         { status: 400 }
       );
     }
 
-    // 读取文件内容
-    const fileContent = await file.text();
+    // 解析文件内容
+    let text = '';
+
+    try {
+      const parseResult = await parseFile(file);
+      text = parseResult.text;
+
+      if (parseResult.warnings.length > 0) {
+        console.warn('[题库导入] 解析警告:', parseResult.warnings);
+      }
+    } catch (error) {
+      return NextResponse.json(
+        { error: error instanceof Error ? error.message : '文件解析失败' },
+        { status: 400 }
+      );
+    }
+
+    if (!text.trim()) {
+      return NextResponse.json(
+        { error: '文件内容为空' },
+        { status: 400 }
+      );
+    }
+
+    // 解析文件内容
     let items: any[] = [];
 
-    // 解析文件
+    // 如果是 JSON 或 CSV，使用现有逻辑
     if (fileExt === 'json') {
       try {
-        const jsonData = JSON.parse(fileContent);
+        const jsonData = JSON.parse(text);
         items = Array.isArray(jsonData) ? jsonData : (jsonData.items || []);
       } catch (error) {
         return NextResponse.json(
@@ -63,7 +88,49 @@ export async function POST(request: NextRequest) {
         );
       }
     } else if (fileExt === 'csv') {
-      items = parseCSV(fileContent);
+      items = parseCSV(text);
+    } else {
+      // 对于其他格式（txt, md, docx, pdf），使用 AI 智能解析
+      try {
+        const aiResult = await fetch('/api/admin/ai/parse-words', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: text,
+            includeExamples: true
+          }),
+        });
+
+        if (aiResult.ok) {
+          const aiData = await aiResult.json();
+          if (aiData.success && aiData.data && aiData.data.words) {
+            // 将 AI 解析的单词转换为标准格式
+            items = aiData.data.words.map((w: any) => ({
+              word: w.word,
+              meaning: w.definition,
+              phonetic: w.pronunciation,
+              partOfSpeech: w.partOfSpeech,
+              example: w.example,
+              exampleTranslation: w.exampleTranslation,
+            }));
+            console.log('[题库导入] AI 解析成功，解析到', items.length, '个单词');
+          }
+        }
+      } catch (error) {
+        console.error('[题库导入] AI 解析失败:', error);
+        return NextResponse.json(
+          {
+            error: '文件解析失败',
+            details: error instanceof Error ? error.message : '未知错误',
+            suggestions: [
+              '请确保文件内容包含有效的单词数据',
+              '请确保 AI 提供商已正确配置',
+              '请检查网络连接是否正常'
+            ]
+          },
+          { status: 400 }
+        );
+      }
     }
 
     if (items.length === 0) {
