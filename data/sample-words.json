@@ -1,0 +1,252 @@
+[
+  {
+    "word": "help",
+    "wordType": "verb",
+    "phonetic": "/help/",
+    "meaning": "帮助",
+    "example": "Can you help me?",
+    "exampleTranslation": "你能帮我吗？",
+    "grade": "6年级",
+    "difficulty": 1
+  },
+  {
+    "word": "helpful",
+    "wordType": "adj",
+    "phonetic": "/ˈhelpfl/",
+    "meaning": "有帮助的",
+    "example": "She is very helpful.",
+    "exampleTranslation": "她非常有帮助。",
+    "grade": "7年级",
+    "difficulty": 2
+  },
+  {
+    "word": "helpfully",
+    "wordType": "adv",
+    "phonetic": "/ˈhelpfəli/",
+    "meaning": "有帮助地",
+    "example": "He answered my question helpfully.",
+    "exampleTranslation": "他很有帮助地回答了我的问题。",
+    "grade": "8年级",
+    "difficulty": 2
+  },
+  {
+    "word": "succeed",
+    "wordType": "verb",
+    "phonetic": "/səkˈsiːd/",
+    "meaning": "成功",
+    "example": "He succeeded in his exam.",
+    "exampleTranslation": "他考试成功了。",
+    "grade": "7年级",
+    "difficulty": 2
+  },
+  {
+    "word": "success",
+    "wordType": "noun",
+    "phonetic": "/səkˈses/",
+    "meaning": "成功",
+    "example": "His success inspired us.",
+    "exampleTranslation": "他的成功激励了我们。",
+    "grade": "7年级",
+    "difficulty": 2
+  },
+  {
+    "word": "successful",
+    "wordType": "adj",
+    "phonetic": "/səkˈsesfl/",
+    "meaning": "成功的",
+    "example": "The project was successful.",
+    "exampleTranslation": "这个项目是成功的。",
+    "grade": "8年级",
+    "difficulty": 2
+  },
+  {
+    "word": "successfully",
+    "wordType": "adv",
+    "phonetic": "/səkˈsesfəli/",
+    "meaning": "成功地",
+    "example": "We successfully completed the task.",
+    "exampleTranslation": "我们成功完成了任务。",
+    "grade": "8年级",
+    "difficulty": 2
+  },
+  {
+    "word": "happy",
+    "wordType": "adj",
+    "phonetic": "/ˈhæpi/",
+    "meaning": "快乐的",
+    "example": "She looks happy today.",
+    "exampleTranslation": "她今天看起来很快乐。",
+    "grade": "6年级",
+    "difficulty": 1
+  },
+  {
+    "word": "happily",
+    "wordType": "adv",
+    "phonetic": "/ˈhæpɪli/",
+    "meaning": "快乐地",
+    "example": "The children played happily.",
+    "exampleTranslation": "孩子们快乐地玩耍。",
+    "grade": "7年级",
+    "difficulty": 2
+  },
+  {
+    "word": "happiness",
+    "wordType": "noun",
+    "phonetic": "/ˈhæpinəs/",
+    "meaning": "幸福",
+    "example": "Money can't buy happiness.",
+    "exampleTranslation": "金钱买不到幸福。",
+    "grade": "7年级",
+    "difficulty": 2
+  },
+  {
+    "word": "unhappy",
+    "wordType": "adj",
+    "phonetic": "/ʌnˈhæpi/",
+    "meaning": "不快乐的",
+    "example": "He was unhappy with the result.",
+    "exampleTranslation": "他对结果不满意。",
+    "grade": "7年级",
+    "difficulty": 2
+  },
+  {
+    "word": "care",
+    "wordType": "verb",
+    "phonetic": "/keər/",
+    "meaning": "关心",
+    "example": "She cares about her students.",
+    "exampleTranslation": "她关心她的学生。",
+    "grade": "6年级",
+    "difficulty": 1
+  },
+  {
+    "word": "careful",
+    "wordType": "adj",
+    "phonetic": "/ˈkeərfl/",
+    "meaning": "小心的",
+    "example": "Be careful when you cross the street.",
+    "exampleTranslation": "过马路时要小心。",
+    "grade": "7年级",
+    "difficulty": 2
+  },
+  {
+    "word": "carefully",
+    "wordType": "adv",
+    "phonetic": "/ˈkeərfəli/",
+    "meaning": "小心地",
+    "example": "He listened carefully.",
+    "exampleTranslation": "他认真地听。",
+    "grade": "7年级",
+    "difficulty": 2
+  },
+  {
+    "word": "careless",
+    "wordType": "adj",
+    "phonetic": "/ˈkeərləs/",
+    "meaning": "粗心的",
+    "example": "He made a careless mistake.",
+    "exampleTranslation": "他犯了一个粗心的错误。",
+    "grade": "8年级",
+    "difficulty": 2
+  },
+  {
+    "word": "carelessly",
+    "wordType": "adv",
+    "phonetic": "/ˈkeərləsli/",
+    "meaning": "粗心地",
+    "example": "He spoke carelessly.",
+    "exampleTranslation": "他粗心地说话。",
+    "grade": "8年级",
+    "difficulty": 2
+  },
+  {
+    "word": "agree",
+    "wordType": "verb",
+    "phonetic": "/əˈɡriː/",
+    "meaning": "同意",
+    "example": "I agree with you.",
+    "exampleTranslation": "我同意你的观点。",
+    "grade": "7年级",
+    "difficulty": 2
+  },
+  {
+    "word": "agreement",
+    "wordType": "noun",
+    "phonetic": "/əˈɡriːmənt/",
+    "meaning": "同意，协议",
+    "example": "We reached an agreement.",
+    "exampleTranslation": "我们达成了协议。",
+    "grade": "8年级",
+    "difficulty": 2
+  },
+  {
+    "word": "disagree",
+    "wordType": "verb",
+    "phonetic": "/ˌdɪsəˈɡriː/",
+    "meaning": "不同意",
+    "example": "I disagree with this plan.",
+    "exampleTranslation": "我不同意这个计划。",
+    "grade": "8年级",
+    "difficulty": 2
+  },
+  {
+    "word": "use",
+    "wordType": "verb",
+    "phonetic": "/juːz/",
+    "meaning": "使用",
+    "example": "Can I use your phone?",
+    "exampleTranslation": "我可以用你的电话吗？",
+    "grade": "6年级",
+    "difficulty": 1
+  },
+  {
+    "word": "useful",
+    "wordType": "adj",
+    "phonetic": "/ˈjuːsfl/",
+    "meaning": "有用的",
+    "example": "This book is very useful.",
+    "exampleTranslation": "这本书非常有用。",
+    "grade": "7年级",
+    "difficulty": 2
+  },
+  {
+    "word": "usefully",
+    "wordType": "adv",
+    "phonetic": "/ˈjuːsfəli/",
+    "meaning": "有用地",
+    "example": "He spent his time usefully.",
+    "exampleTranslation": "他有效地利用了时间。",
+    "grade": "8年级",
+    "difficulty": 2
+  },
+  {
+    "word": "useless",
+    "wordType": "adj",
+    "phonetic": "/ˈjuːsləs/",
+    "meaning": "无用的",
+    "example": "This tool is useless.",
+    "exampleTranslation": "这个工具没用。",
+    "grade": "8年级",
+    "difficulty": 2
+  },
+  {
+    "word": "play",
+    "wordType": "verb",
+    "phonetic": "/pleɪ/",
+    "meaning": "玩",
+    "example": "Children like to play.",
+    "exampleTranslation": "孩子们喜欢玩耍。",
+    "grade": "6年级",
+    "difficulty": 1
+  },
+  {
+    "word": "player",
+    "wordType": "noun",
+    "phonetic": "/ˈpleɪər/",
+    "meaning": "运动员",
+    "example": "He is a great soccer player.",
+    "exampleTranslation": "他是个很棒的足球运动员。",
+    "grade": "7年级",
+    "difficulty": 2
+  }
+]
