@@ -85,11 +85,13 @@ export default function SmartImportPage() {
   const [description, setDescription] = useState('');
   const [mergeStrategy, setMergeStrategy] = useState<MergeStrategyType>('smart_merge');
   const [useBatchMode, setUseBatchMode] = useState(false); // 是否使用分批模式
+  const [useOCR, setUseOCR] = useState(false); // 是否使用 OCR
   const [previewText, setPreviewText] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
   const [batchProgress, setBatchProgress] = useState<BatchUploadProgress | null>(null);
+  const [ocrProgress, setOcrProgress] = useState(0); // OCR 进度
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -100,6 +102,13 @@ export default function SmartImportPage() {
 
       // 检查文件类型
       const fileExt = selectedFile.name.split('.').pop()?.toLowerCase() || '';
+      const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
+      const isImage = imageExtensions.includes(fileExt);
+
+      // 如果是图片，自动启用 OCR
+      if (isImage && !useOCR) {
+        setUseOCR(true);
+      }
 
       // 如果是大文件模式且选择的是PDF，自动关闭大文件模式
       if (useBatchMode && fileExt === 'pdf') {
@@ -118,6 +127,9 @@ export default function SmartImportPage() {
             setPreviewText(text.substring(0, 1000)); // 只显示前1000字符
           };
           reader.readAsText(selectedFile);
+        } else if (isImage) {
+          // 图片文件，提示需要 OCR 识别
+          setPreviewText(`此图片需要使用 OCR 识别才能提取文字。\n\n文件名：${selectedFile.name}\n文件大小：${(selectedFile.size / 1024).toFixed(2)} KB\n\n请开启"OCR 识别"开关后点击上传。`);
         } else {
           // docx 或 pdf 文件，需要解析
           // 在客户端无法直接解析，显示提示信息
@@ -133,6 +145,17 @@ export default function SmartImportPage() {
   const handleUpload = async () => {
     if (!file) {
       alert('请选择文件');
+      return;
+    }
+
+    // 检查文件类型
+    const fileExt = file.name.split('.').pop()?.toLowerCase() || '';
+    const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
+    const isImage = imageExtensions.includes(fileExt);
+
+    // 如果是图片且启用 OCR，先进行 OCR 识别
+    if (isImage && useOCR) {
+      await handleOCRUpload();
       return;
     }
 
@@ -194,6 +217,105 @@ export default function SmartImportPage() {
       alert('上传失败');
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  /**
+   * OCR 上传处理
+   */
+  const handleOCRUpload = async () => {
+    if (!file) {
+      alert('请选择文件');
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadProgress(0);
+    setUploadResult(null);
+
+    try {
+      console.log('[OCR] 开始识别图片:', file.name);
+
+      // 动态导入 OCR 工具
+      const { recognizeText } = await import('@/utils/ocr');
+
+      // 进行 OCR 识别
+      const ocrResult = await recognizeText(
+        file,
+        { language: 'eng+chi_sim' },
+        (progress) => {
+          setOcrProgress(progress);
+          setUploadProgress(progress * 0.5); // OCR 占总进度的 50%
+        }
+      );
+
+      console.log('[OCR] 识别完成:', ocrResult);
+
+      if (ocrResult.text.trim().length === 0) {
+        alert('OCR 识别失败，未能从图片中提取到文字。请尝试使用更清晰的图片。');
+        return;
+      }
+
+      // 将识别出的文本转换为文本文件
+      const textFile = new File([ocrResult.text], `${file.name}_ocr.txt`, {
+        type: 'text/plain',
+      });
+
+      // 更新文件引用
+      setFile(textFile);
+      setPreviewText(ocrResult.text.substring(0, 1000));
+
+      // 继续上传
+      setIsUploading(false);
+
+      // 自动触发上传
+      setUploadProgress(50);
+
+      const formData = new FormData();
+      formData.append('file', textFile);
+      formData.append('description', `OCR 识别: ${file.name}`);
+
+      if (uploadType === 'grammar' || uploadType === 'transformation') {
+        formData.append('mergeStrategy', mergeStrategy);
+      }
+
+      let endpoint = '';
+      switch (uploadType) {
+        case 'exam':
+          endpoint = '/api/admin/exam/upload';
+          break;
+        case 'words':
+          endpoint = '/api/admin/words/upload';
+          formData.append('includeExamples', 'true');
+          break;
+        default:
+          endpoint = '/api/admin/library/import';
+          formData.append('libraryType', uploadType);
+          if (uploadType === 'grammar' || uploadType === 'transformation') {
+            formData.append('mergeStrategy', mergeStrategy);
+          }
+      }
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setUploadResult(data.data);
+        setUploadProgress(100);
+        alert(`OCR 识别成功！\n\n置信度: ${ocrResult.confidence.toFixed(2)}%\n${data.success ? '上传成功！' : data.error}`);
+      } else {
+        alert(`OCR 识别成功，但上传失败：${data.error}`);
+      }
+    } catch (error) {
+      console.error('OCR 上传失败:', error);
+      alert(`OCR 上传失败：${error instanceof Error ? error.message : '未知错误'}`);
+    } finally {
+      setIsUploading(false);
+      setOcrProgress(0);
     }
   };
 
@@ -328,7 +450,9 @@ export default function SmartImportPage() {
                 <Input
                   type="file"
                   accept={
-                    uploadType === 'words' && useBatchMode
+                    useOCR
+                      ? '.jpg,.jpeg,.png,.gif,.bmp,.webp'
+                      : uploadType === 'words' && useBatchMode
                       ? '.docx'
                       : '.txt,.md,.json,.csv,.docx,.pdf'
                   }
@@ -336,10 +460,38 @@ export default function SmartImportPage() {
                   disabled={isUploading}
                 />
                 <p className="text-sm text-muted-foreground">
-                  {uploadType === 'words' && useBatchMode
+                  {useOCR
+                    ? 'OCR 模式：支持 JPG, JPEG, PNG, GIF, BMP, WEBP 格式的图片'
+                    : uploadType === 'words' && useBatchMode
                     ? '大文件模式仅支持 DOCX 格式。PDF 请转换为 DOCX 或使用普通模式。'
-                    : '支持的格式：TXT, MD, JSON, CSV, DOCX, PDF'}
+                    : '支持的格式：TXT, MD, JSON, CSV, DOCX, PDF（图片请使用 OCR 模式）'}
                 </p>
+              </div>
+
+              {/* OCR 开关 */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>OCR 识别（图片文字识别）</Label>
+                    <p className="text-sm text-muted-foreground">
+                      从图片中提取文字，适用于扫描件或截图
+                    </p>
+                  </div>
+                  <Switch
+                    checked={useOCR}
+                    onCheckedChange={setUseOCR}
+                    disabled={isUploading}
+                  />
+                </div>
+
+                {useOCR && (
+                  <Alert>
+                    <Info className="h-4 w-4" />
+                    <AlertDescription>
+                      OCR 识别将自动从图片中提取文字。首次使用需要加载字库（约 10MB），可能需要一些时间。
+                    </AlertDescription>
+                  </Alert>
+                )}
               </div>
 
               {/* 大文件模式开关 */}
@@ -489,10 +641,23 @@ export default function SmartImportPage() {
               {isUploading && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
-                    <span>{batchProgress ? batchProgress.stage : '处理中...'}</span>
+                    <span>
+                      {ocrProgress > 0 ? `OCR 识别中... ${ocrProgress.toFixed(0)}%`
+                        : batchProgress ? batchProgress.stage
+                        : '处理中...'}
+                    </span>
                     <span>{uploadProgress}%</span>
                   </div>
                   <Progress value={uploadProgress} />
+                  {/* OCR 进度提示 */}
+                  {ocrProgress > 0 && (
+                    <div className="text-xs text-muted-foreground space-y-1 bg-blue-50 dark:bg-blue-950 p-2 rounded">
+                      <div className="flex items-center gap-2">
+                        <RefreshCw className="w-3 h-3 animate-spin" />
+                        <span>正在识别图片文字，首次使用需要加载字库（约 10MB），请稍候...</span>
+                      </div>
+                    </div>
+                  )}
                   {/* 批量上传详细进度 */}
                   {batchProgress && (
                     <div className="text-xs text-muted-foreground space-y-1 bg-gray-50 dark:bg-gray-900 p-2 rounded">
