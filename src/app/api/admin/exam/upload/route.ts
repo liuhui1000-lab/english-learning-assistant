@@ -155,7 +155,7 @@ async function importGrammarExercises(
               name: question.knowledgePoint,
               category: question.subKnowledgePoint || '通用',
               description: `模拟卷 ${version} - ${question.knowledgePoint}`,
-              level: 2, // 初二
+              level: '8年级', // 初二
             })
             .returning();
 
