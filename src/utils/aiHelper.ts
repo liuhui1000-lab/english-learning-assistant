@@ -86,6 +86,164 @@ const API_ENDPOINTS: Record<string, any> = {
 };
 
 /**
+ * 通用 AI 调用函数
+ * 用于语法点提取、内容相似度判断、智能合并等
+ *
+ * @param prompt 用户提示词
+ * @param options 选项
+ * @returns AI 响应
+ */
+export async function callAI(
+  prompt: string,
+  options: {
+    responseType?: 'json' | 'text';
+    maxTokens?: number;
+    timeout?: number;
+  } = {}
+): Promise<any> {
+  const {
+    responseType = 'json',
+    maxTokens = 500,
+    timeout = 25000
+  } = options;
+
+  // 获取 AI 配置
+  const provider = await getActiveAIProvider();
+  if (!provider) {
+    throw new Error('没有可用的 AI 配置');
+  }
+
+  const apiConfig = API_ENDPOINTS[provider.provider_name];
+  if (!apiConfig) {
+    throw new Error(`不支持的 AI 提供商: ${provider.provider_name}`);
+  }
+
+  // 构建系统提示词
+  const systemPrompt = responseType === 'json'
+    ? '你是一个专业的 AI 助手。请直接返回纯 JSON 格式，不要包含任何其他文本或标记。'
+    : '你是一个专业的 AI 助手。';
+
+  // 构建请求 payload
+  let payload: any;
+
+  if (provider.provider_name === 'gemini') {
+    payload = {
+      contents: [{
+        parts: [
+          { text: systemPrompt },
+          { text: prompt }
+        ]
+      }],
+      generationConfig: {
+        maxOutputTokens: maxTokens,
+        temperature: 0.3,
+      }
+    };
+  } else if (provider.provider_name === 'claude') {
+    payload = {
+      model: provider.model_name,
+      max_tokens: maxTokens,
+      temperature: 0.3,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: prompt }]
+    };
+  } else if (provider.provider_name === 'minimax') {
+    payload = {
+      model: provider.model_name,
+      tokens_to_generate: maxTokens,
+      temperature: 0.3,
+      messages: [
+        { sender_type: 'SYSTEM', sender_name: 'System', text: systemPrompt },
+        { sender_type: 'USER', sender_name: 'User', text: prompt }
+      ]
+    };
+  } else {
+    payload = {
+      model: provider.model_name,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: prompt }
+      ],
+      max_tokens: maxTokens,
+      temperature: 0.3,
+    };
+  }
+
+  // 超时控制
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    const response = await fetch(apiConfig.url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...apiConfig.headers(provider.api_key)
+      },
+      body: JSON.stringify(payload),
+      signal: controller.signal
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`AI 调用失败 (${response.status}): ${errorText.substring(0, 200)}`);
+    }
+
+    const responseData = await response.json();
+
+    // 解析响应
+    let responseText = '';
+
+    if (provider.provider_name === 'gemini') {
+      responseText = responseData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    } else if (provider.provider_name === 'claude') {
+      responseText = responseData.content?.[0]?.text || '';
+    } else if (provider.provider_name === 'minimax') {
+      responseText = responseData.choices?.[0]?.messages?.[0]?.text || '';
+    } else {
+      responseText = responseData.choices?.[0]?.message?.content || '';
+    }
+
+    if (!responseText) {
+      throw new Error('AI 返回的内容为空');
+    }
+
+    // 清理响应文本
+    responseText = responseText
+      .replace(/```json\s*/g, '')
+      .replace(/```\s*/g, '')
+      .trim();
+
+    if (responseType === 'json') {
+      try {
+        return JSON.parse(responseText);
+      } catch (error) {
+        // 尝试提取 JSON 部分
+        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          return JSON.parse(jsonMatch[0]);
+        }
+        throw new Error('AI 返回的格式不正确，无法解析为 JSON');
+      }
+    } else {
+      return responseText;
+    }
+  } catch (error) {
+    clearTimeout(timeoutId);
+
+    if (error instanceof Error) {
+      if (error.name === 'AbortError' || error.message.includes('abort')) {
+        throw new Error('AI 调用超时');
+      }
+    }
+
+    throw error;
+  }
+}
+
+/**
  * 调用 AI 进行智能单词解析
  * @param text - 要解析的文本
  * @param options - 解析选项

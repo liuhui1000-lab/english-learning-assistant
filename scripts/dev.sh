@@ -1,10 +1,10 @@
 #!/bin/bash
 set -Eeuo pipefail
 
-PORT=3000
+PORT=5000
 COZE_WORKSPACE_PATH="${COZE_WORKSPACE_PATH:-$(pwd)}"
 NODE_ENV=development
-DEPLOY_RUN_PORT=3000
+DEPLOY_RUN_PORT=5000
 
 cd "${COZE_WORKSPACE_PATH}"
 
@@ -30,4 +30,5 @@ echo "Clearing port ${PORT} before start."
 kill_port_if_listening
 echo "Starting HTTP service on port ${PORT} for dev..."
 
-node ./node_modules/.bin/next dev --webpack -H 0.0.0.0 -p $PORT
+# 直接运行 next 命令，不需要用 node 执行
+./node_modules/.bin/next dev --webpack -H 0.0.0.0 -p $PORT

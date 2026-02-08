@@ -9,6 +9,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb, query } from '@/utils/db';
 import { checkPermission } from '@/utils/auth';
 import { parseFile, getSupportedFormats } from '@/utils/fileParser';
+import {
+  findDuplicateGrammarPoints,
+  DuplicateMatch
+} from '@/utils/duplicateDetector';
+import {
+  batchCheckContentSimilarity
+} from '@/utils/contentSimilarityChecker';
+import {
+  applyGrammarPointMergeStrategy,
+  applyCollocationMergeStrategy,
+  MergeStrategy
+} from '@/utils/mergeStrategy';
 
 /**
  * POST /api/admin/library/import - 导入题库文件
@@ -157,7 +169,11 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       );
     }
-    processImport(taskId, libraryType, version, description, items, permission.userId);
+
+    // 获取合并策略参数
+    const mergeStrategy = formData.get('mergeStrategy') as MergeStrategy || MergeStrategy.SMART_MERGE;
+
+    processImport(taskId, libraryType, version, description, items, permission.userId, mergeStrategy);
 
     return NextResponse.json({
       success: true,
@@ -297,12 +313,24 @@ async function processImport(
   version: string,
   description: string,
   items: any[],
-  userId: string
+  userId: string,
+  mergeStrategy: MergeStrategy = MergeStrategy.SMART_MERGE
 ) {
   try {
     let successCount = 0;
     let failedCount = 0;
     const errors: string[] = [];
+
+    // 去重统计
+    const deduplicationStats = {
+      exactMatches: 0,
+      possibleMatches: 0,
+      confirmedByAI: 0,
+      falsePositives: 0,
+      newItems: 0,
+      mergedItems: 0,
+      skippedItems: 0,
+    };
 
     // 创建或查找版本
     let versionResult = await query(
@@ -344,6 +372,279 @@ async function processImport(
             );
             successCount++;
             break;
+
+          case 'grammar':
+            // 语法点导入，支持去重合并
+            const grammarName = item.name || item.Name || item['语法点'];
+            const grammarCategory = item.category || item.Category || item['分类'];
+            const grammarDescription = item.description || item.Description || item['描述'] || '';
+            const grammarExamples = item.examples || item.Examples || item['例句'] || [];
+
+            // 1. 查找可能的重复项
+            const duplicates = await findDuplicateGrammarPoints(grammarName, grammarDescription);
+
+            if (duplicates.exactMatch) {
+              // 精确匹配
+              deduplicationStats.exactMatches++;
+
+              const mergeResult = await applyGrammarPointMergeStrategy(
+                duplicates.exactMatch,
+                {
+                  name: grammarName,
+                  category: grammarCategory,
+                  description: grammarDescription,
+                  examples: grammarExamples,
+                  source: 'manual',
+                },
+                mergeStrategy
+              );
+
+              if (mergeResult.success && mergeStrategy !== MergeStrategy.SKIP) {
+                await query(
+                  `UPDATE grammarPoints
+                   SET name = $1, category = $2, description = $3, examples = $4, updatedAt = NOW()
+                   WHERE id = $5`,
+                  [mergeResult.mergedItem.name,
+                   mergeResult.mergedItem.category,
+                   mergeResult.mergedItem.description,
+                   mergeResult.mergedItem.examples,
+                   duplicates.exactMatch.id]
+                );
+                deduplicationStats.mergedItems++;
+                successCount++;
+              } else if (mergeStrategy === MergeStrategy.SKIP) {
+                deduplicationStats.skippedItems++;
+                successCount++;
+              } else {
+                failedCount++;
+                errors.push(`${grammarName}: ${mergeResult.reason}`);
+              }
+            } else if (duplicates.possibleMatches.length > 0) {
+              // 可能的匹配
+              deduplicationStats.possibleMatches++;
+
+              const possibleMatches = duplicates.possibleMatches.map(match => ({
+                newItem: {
+                  name: grammarName,
+                  category: grammarCategory,
+                  description: grammarDescription,
+                  examples: grammarExamples,
+                },
+                existingItem: match.item,
+                similarity: match.similarity,
+              }));
+
+              const { confirmedMatches, falseMatches } = await batchCheckContentSimilarity(
+                possibleMatches,
+                'grammarPoints',
+                0.8
+              );
+
+              deduplicationStats.confirmedByAI += confirmedMatches.length;
+              deduplicationStats.falsePositives += falseMatches.length;
+
+              if (confirmedMatches.length > 0) {
+                // 确认为重复，应用合并策略
+                const match = confirmedMatches[0];
+                const mergeResult = await applyGrammarPointMergeStrategy(
+                  match.existingItem,
+                  {
+                    name: grammarName,
+                    category: grammarCategory,
+                    description: grammarDescription,
+                    examples: grammarExamples,
+                    source: 'manual',
+                  },
+                  mergeStrategy
+                );
+
+                if (mergeResult.success && mergeStrategy !== MergeStrategy.SKIP) {
+                  await query(
+                    `UPDATE grammarPoints
+                     SET name = $1, category = $2, description = $3, examples = $4, updatedAt = NOW()
+                     WHERE id = $5`,
+                    [mergeResult.mergedItem.name,
+                     mergeResult.mergedItem.category,
+                     mergeResult.mergedItem.description,
+                     mergeResult.mergedItem.examples,
+                     match.existingItem.id]
+                  );
+                  deduplicationStats.mergedItems++;
+                  successCount++;
+                } else if (mergeStrategy === MergeStrategy.SKIP) {
+                  deduplicationStats.skippedItems++;
+                  successCount++;
+                } else {
+                  failedCount++;
+                  errors.push(`${grammarName}: ${mergeResult.reason}`);
+                }
+              } else {
+                // AI 判断为不重复，插入新语法点
+                await query(
+                  `INSERT INTO grammarPoints (name, category, description, examples, source, createdAt)
+                   VALUES ($1, $2, $3, $4, $5, NOW())`,
+                  [grammarName, grammarCategory, grammarDescription, grammarExamples, 'manual']
+                );
+                deduplicationStats.newItems++;
+                successCount++;
+              }
+            } else {
+              // 没有匹配，插入新语法点
+              await query(
+                `INSERT INTO grammarPoints (name, category, description, examples, source, createdAt)
+                 VALUES ($1, $2, $3, $4, $5, NOW())`,
+                [grammarName, grammarCategory, grammarDescription, grammarExamples, 'manual']
+              );
+              deduplicationStats.newItems++;
+              successCount++;
+            }
+            break;
+
+          case 'collocation':
+            // 固定搭配导入，支持去重合并
+            const phrase = item.phrase || item.Phrase || item['搭配'];
+            const meaning = item.meaning || item.Meaning || item['含义'] || '';
+            const example = item.example || item.Example || item['例句'] || '';
+
+            // 1. 查找可能的重复项
+            const existingCollocations = await query(
+              `SELECT id, phrase, meaning, example FROM collocations`
+            );
+
+            let exactCollocationMatch = false;
+            let possibleCollocationMatches: Array<{ item: any, similarity: number }> = [];
+
+            // 检查精确匹配
+            for (const existing of existingCollocations.rows) {
+              if (existing.phrase.toLowerCase() === phrase.toLowerCase()) {
+                exactCollocationMatch = true;
+                deduplicationStats.exactMatches++;
+
+                const mergeResult = await applyCollocationMergeStrategy(
+                  existing,
+                  {
+                    phrase: phrase,
+                    meaning: meaning,
+                    example: example,
+                    source: 'manual',
+                  },
+                  mergeStrategy
+                );
+
+                if (mergeResult.success && mergeStrategy !== MergeStrategy.SKIP) {
+                  await query(
+                    `UPDATE collocations
+                     SET phrase = $1, meaning = $2, example = $3, updatedAt = NOW()
+                     WHERE id = $4`,
+                    [mergeResult.mergedItem.phrase,
+                     mergeResult.mergedItem.meaning,
+                     mergeResult.mergedItem.example,
+                     existing.id]
+                  );
+                  deduplicationStats.mergedItems++;
+                  successCount++;
+                } else if (mergeStrategy === MergeStrategy.SKIP) {
+                  deduplicationStats.skippedItems++;
+                  successCount++;
+                } else {
+                  failedCount++;
+                  errors.push(`${phrase}: ${mergeResult.reason}`);
+                }
+                break;
+              }
+            }
+
+            // 如果没有精确匹配，检查模糊匹配
+            if (!exactCollocationMatch) {
+              for (const existing of existingCollocations.rows) {
+                const phraseSimilarity = calculateStringSimilarity(phrase, existing.phrase);
+                if (phraseSimilarity > 0.7) {
+                  possibleCollocationMatches.push({
+                    item: existing,
+                    similarity: phraseSimilarity,
+                  });
+                }
+              }
+
+              if (possibleCollocationMatches.length > 0) {
+                deduplicationStats.possibleMatches++;
+
+                // 使用 AI 判断相似度
+                const possibleMatches = possibleCollocationMatches.map(match => ({
+                  newItem: {
+                    phrase: phrase,
+                    meaning: meaning,
+                    example: example,
+                  },
+                  existingItem: match.item,
+                  similarity: match.similarity,
+                }));
+
+                const { confirmedMatches, falseMatches } = await batchCheckContentSimilarity(
+                  possibleMatches,
+                  'collocations',
+                  0.8
+                );
+
+                deduplicationStats.confirmedByAI += confirmedMatches.length;
+                deduplicationStats.falsePositives += falseMatches.length;
+
+                if (confirmedMatches.length > 0) {
+                  // 确认为重复，应用合并策略
+                  const match = confirmedMatches[0];
+                  const mergeResult = await applyCollocationMergeStrategy(
+                    match.existingItem,
+                    {
+                      phrase: phrase,
+                      meaning: meaning,
+                      example: example,
+                      source: 'manual',
+                    },
+                    mergeStrategy
+                  );
+
+                  if (mergeResult.success && mergeStrategy !== MergeStrategy.SKIP) {
+                    await query(
+                      `UPDATE collocations
+                       SET phrase = $1, meaning = $2, example = $3, updatedAt = NOW()
+                       WHERE id = $4`,
+                      [mergeResult.mergedItem.phrase,
+                       mergeResult.mergedItem.meaning,
+                       mergeResult.mergedItem.example,
+                       match.existingItem.id]
+                    );
+                    deduplicationStats.mergedItems++;
+                    successCount++;
+                  } else if (mergeStrategy === MergeStrategy.SKIP) {
+                    deduplicationStats.skippedItems++;
+                    successCount++;
+                  } else {
+                    failedCount++;
+                    errors.push(`${phrase}: ${mergeResult.reason}`);
+                  }
+                } else {
+                  // 没有匹配，插入新搭配
+                  await query(
+                    `INSERT INTO collocations (phrase, meaning, example, source, createdAt)
+                     VALUES ($1, $2, $3, $4, NOW())`,
+                    [phrase, meaning, example, 'manual']
+                  );
+                  deduplicationStats.newItems++;
+                  successCount++;
+                }
+              } else {
+                // 没有匹配，插入新搭配
+                await query(
+                  `INSERT INTO collocations (phrase, meaning, example, source, createdAt)
+                   VALUES ($1, $2, $3, $4, NOW())`,
+                  [phrase, meaning, example, 'manual']
+                );
+                deduplicationStats.newItems++;
+                successCount++;
+              }
+            }
+            break;
+
           // 其他题库类型...
           default:
             failedCount++;
@@ -351,7 +652,7 @@ async function processImport(
         }
       } catch (error: any) {
         failedCount++;
-        errors.push(`${item.word || item.id}: ${error.message}`);
+        errors.push(`${item.word || item.name || item.id}: ${error.message}`);
       }
     }
 
@@ -365,11 +666,12 @@ async function processImport(
            changes = jsonb_build_object(
              'added', $2,
              'failed', $3,
-             'errors', $4
+             'errors', $4,
+             'deduplication', $5
            ),
            completed_at = NOW()
-       WHERE id = $5`,
-      [items.length, successCount, failedCount, JSON.stringify(errors.slice(0, 10)), taskId]
+       WHERE id = $6`,
+      [items.length, successCount, failedCount, JSON.stringify(errors.slice(0, 10)), JSON.stringify(deduplicationStats), taskId]
     );
 
     // 记录版本变更
@@ -433,4 +735,51 @@ export async function GET_task_detail(
       { status: 500 }
     );
   }
+}
+
+/**
+ * 计算字符串相似度（基于编辑距离）
+ */
+function calculateStringSimilarity(str1: string, str2: string): number {
+  if (!str1 || !str2) return 0;
+
+  const s1 = str1.toLowerCase();
+  const s2 = str2.toLowerCase();
+
+  // 如果完全相同，返回 1
+  if (s1 === s2) return 1;
+
+  const len1 = s1.length;
+  const len2 = s2.length;
+
+  // 计算编辑距离矩阵
+  const matrix: number[][] = [];
+
+  for (let i = 0; i <= len1; i++) {
+    matrix[i] = [i];
+  }
+
+  for (let j = 0; j <= len2; j++) {
+    matrix[0][j] = j;
+  }
+
+  for (let i = 1; i <= len1; i++) {
+    for (let j = 1; j <= len2; j++) {
+      if (s1[i - 1] === s2[j - 1]) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j] + 1, // 删除
+          matrix[i][j - 1] + 1, // 插入
+          matrix[i - 1][j - 1] + 1 // 替换
+        );
+      }
+    }
+  }
+
+  const distance = matrix[len1][len2];
+  const maxLen = Math.max(len1, len2);
+
+  // 相似度 = 1 - (编辑距离 / 最大长度)
+  return 1 - distance / maxLen;
 }

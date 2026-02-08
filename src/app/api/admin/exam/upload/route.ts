@@ -28,6 +28,7 @@ import { eq } from 'drizzle-orm';
 import { checkPermission } from '@/utils/auth';
 import { randomUUID } from 'crypto';
 import { generateQuestionHash, analyzeHashDuplication } from '@/utils/questionHash';
+import { extractGrammarPointFromQuestion } from '@/utils/grammarPointExtractor';
 
 export async function POST(request: NextRequest) {
   try {
@@ -127,7 +128,8 @@ export async function POST(request: NextRequest) {
       paper.id,
       version,
       grade,
-      semester
+      semester,
+      paperName
     );
 
     return NextResponse.json({
@@ -182,7 +184,8 @@ async function processQuestionsWithDeduplication(
   paperId: string,
   version: string,
   grade: string,
-  semester: string
+  semester: string,
+  paperName: string
 ) {
   const db = await getDb();
   const questionTypeMap = {
@@ -204,6 +207,8 @@ async function processQuestionsWithDeduplication(
     paperId,
     version,
     grade,
+    semester,
+    paperName,
     questionTypeMap.grammar
   );
 
@@ -214,6 +219,8 @@ async function processQuestionsWithDeduplication(
     paperId,
     version,
     grade,
+    semester,
+    paperName,
     questionTypeMap.wordFormation
   );
 
@@ -224,6 +231,8 @@ async function processQuestionsWithDeduplication(
     paperId,
     version,
     grade,
+    semester,
+    paperName,
     questionTypeMap.reading
   );
 
@@ -264,6 +273,8 @@ async function processQuestionBatch(
   paperId: string,
   version: string,
   grade: string,
+  semester: string,
+  paperName: string,
   uniqueQuestionIds: Set<string>
 ) {
   const db = await getDb();
@@ -341,7 +352,7 @@ async function processQuestionBatch(
 
       // 同时导入到对应的模块表（保持兼容）
       if (type === 'grammar') {
-        await importGrammarExercise(question, questionId, version, grade);
+        await importGrammarExercise(question, questionId, version, grade, paperName);
       } else if (type === 'word_formation') {
         await importWordFormation(question, questionId, version);
       } else if (type === 'reading') {
@@ -366,19 +377,21 @@ async function processQuestionBatch(
 }
 
 /**
- * 导入语法题
+ * 导入语法题（集成 AI 语法点提取）
  */
 async function importGrammarExercise(
   question: Question,
   questionId: string,
   version: string,
-  grade: string
+  grade: string,
+  paperName: string
 ): Promise<void> {
   const db = await getDb();
 
   // 查找或创建语法知识点
   let grammarPointId = null;
 
+  // 1. 如果题目已经标记了语法点，直接使用
   if (question.knowledgePoint) {
     const existingPoints = await db
       .select()
@@ -395,10 +408,60 @@ async function importGrammarExercise(
           category: question.subKnowledgePoint || '通用',
           description: `模拟卷 ${version} - ${question.knowledgePoint}`,
           level: grade,
+          sourceType: 'manual',
+          sourceInfo: `模拟卷 ${version}`,
         })
         .returning();
 
       grammarPointId = newPoint.id;
+    }
+  } else {
+    // 2. 使用 AI 提取语法点
+    try {
+      console.log(`[模拟卷上传] 使用 AI 提取语法点: ${question.question.substring(0, 50)}...`);
+
+      const extraction = await extractGrammarPointFromQuestion({
+        question: question.question,
+        options: question.options,
+        correctAnswer: question.correctAnswer,
+        explanation: question.explanation,
+      });
+
+      if (extraction && extraction.pointName) {
+        console.log(`[模拟卷上传] AI 提取语法点: ${extraction.pointName} (置信度: ${extraction.confidence})`);
+
+        // 3. 查找或创建语法点
+        const [existingPoint] = await db
+          .select()
+          .from(grammarPoints)
+          .where(eq(grammarPoints.name, extraction.pointName))
+          .limit(1);
+
+        if (existingPoint) {
+          // 语法点已存在
+          grammarPointId = existingPoint.id;
+          console.log(`[模拟卷上传] 语法点已存在: ${extraction.pointName}`);
+        } else {
+          // 创建新语法点
+          const [newPoint] = await db
+            .insert(grammarPoints)
+            .values({
+              name: extraction.pointName,
+              category: extraction.category || '未分类',
+              description: `从模拟卷 "${paperName}" 提取的语法点。\n\n${extraction.reason || ''}`,
+              level: grade,
+              sourceType: 'exam_extracted',
+              sourceInfo: `模拟卷 ${version} (${paperName})`,
+            })
+            .returning();
+
+          grammarPointId = newPoint.id;
+          console.log(`[模拟卷上传] 创建新语法点: ${extraction.pointName}`);
+        }
+      }
+    } catch (error) {
+      console.error(`[模拟卷上传] AI 提取语法点失败:`, error);
+      // 失败不影响后续流程
     }
   }
 
@@ -411,7 +474,7 @@ async function importGrammarExercise(
     explanation: question.explanation,
     source: `模拟卷 ${version}`,
     questionNumber: question.questionNumber,
-    category: question.knowledgePoint || '通用',
+    category: grammarPointId ? null : (question.knowledgePoint || '通用'),
     subcategory: question.subKnowledgePoint || '',
     difficulty: question.difficulty === 'easy' ? 1 : question.difficulty === 'hard' ? 3 : 2,
   };

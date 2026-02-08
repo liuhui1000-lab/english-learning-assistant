@@ -47,12 +47,25 @@ interface UploadResult {
     reading: { success: number; failed: number };
     words: { success: number; failed: number };
   };
+  // 去重统计
+  deduplicationStats?: {
+    exactMatches: number;
+    possibleMatches: number;
+    confirmedByAI: number;
+    falsePositives: number;
+    newItems: number;
+    mergedItems: number;
+    skippedItems: number;
+  };
 }
+
+export type MergeStrategyType = 'replace' | 'append' | 'smart_merge' | 'skip';
 
 export default function SmartImportPage() {
   const [uploadType, setUploadType] = useState('exam');
   const [file, setFile] = useState<File | null>(null);
   const [description, setDescription] = useState('');
+  const [mergeStrategy, setMergeStrategy] = useState<MergeStrategyType>('smart_merge');
   const [previewText, setPreviewText] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -104,6 +117,11 @@ export default function SmartImportPage() {
     formData.append('file', file);
     formData.append('description', description || '');
 
+    // 对于语法和词转，添加合并策略
+    if (uploadType === 'grammar' || uploadType === 'transformation') {
+      formData.append('mergeStrategy', mergeStrategy);
+    }
+
     try {
       let endpoint = '';
       switch (uploadType) {
@@ -117,6 +135,10 @@ export default function SmartImportPage() {
         default:
           endpoint = '/api/admin/library/import';
           formData.append('libraryType', uploadType);
+          // 对于语法和词转，添加合并策略
+          if (uploadType === 'grammar' || uploadType === 'transformation') {
+            formData.append('mergeStrategy', mergeStrategy);
+          }
       }
 
       const response = await fetch(endpoint, {
@@ -235,6 +257,55 @@ export default function SmartImportPage() {
                 />
               </div>
 
+              {/* 合并策略选择（仅语法和词转显示） */}
+              {(uploadType === 'grammar' || uploadType === 'transformation') && (
+                <div className="space-y-2">
+                  <Label>合并策略（检测到重复时）</Label>
+                  <Select value={mergeStrategy} onValueChange={(v: any) => setMergeStrategy(v)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="smart_merge">
+                        <div className="flex flex-col">
+                          <span className="font-medium">智能合并</span>
+                          <span className="text-xs text-muted-foreground">
+                            AI 辅助选择最佳内容（推荐）
+                          </span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="replace">
+                        <div className="flex flex-col">
+                          <span className="font-medium">替换</span>
+                          <span className="text-xs text-muted-foreground">
+                            直接使用新内容覆盖
+                          </span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="append">
+                        <div className="flex flex-col">
+                          <span className="font-medium">追加</span>
+                          <span className="text-xs text-muted-foreground">
+                            保留原有内容，添加新内容
+                          </span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="skip">
+                        <div className="flex flex-col">
+                          <span className="font-medium">跳过</span>
+                          <span className="text-xs text-muted-foreground">
+                            不修改已有内容
+                          </span>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-muted-foreground">
+                    当检测到重复内容时，系统会根据选择的策略进行处理
+                  </p>
+                </div>
+              )}
+
               {/* 文件预览 */}
               {previewText && !uploadResult && (
                 <div className="space-y-2">
@@ -318,6 +389,57 @@ export default function SmartImportPage() {
                         <div className="text-sm text-gray-600 dark:text-gray-400">单词</div>
                       </div>
                     </div>
+
+                    {/* 去重统计（仅语法和词转显示） */}
+                    {uploadResult.deduplicationStats && (uploadType === 'grammar' || uploadType === 'transformation') && (
+                      <div className="space-y-3">
+                        <h4 className="font-semibold flex items-center gap-2">
+                          <Sparkles className="w-4 h-4" />
+                          去重统计
+                        </h4>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                          <div className="p-3 border rounded-lg bg-blue-50 dark:bg-blue-950">
+                            <div className="text-lg font-bold text-blue-600">
+                              {uploadResult.deduplicationStats.exactMatches}
+                            </div>
+                            <div className="text-xs text-gray-600 dark:text-gray-400">精确匹配</div>
+                          </div>
+                          <div className="p-3 border rounded-lg bg-yellow-50 dark:bg-yellow-950">
+                            <div className="text-lg font-bold text-yellow-600">
+                              {uploadResult.deduplicationStats.possibleMatches}
+                            </div>
+                            <div className="text-xs text-gray-600 dark:text-gray-400">可能匹配</div>
+                          </div>
+                          <div className="p-3 border rounded-lg bg-green-50 dark:bg-green-950">
+                            <div className="text-lg font-bold text-green-600">
+                              {uploadResult.deduplicationStats.confirmedByAI}
+                            </div>
+                            <div className="text-xs text-gray-600 dark:text-gray-400">AI 确认重复</div>
+                          </div>
+                          <div className="p-3 border rounded-lg bg-red-50 dark:bg-red-950">
+                            <div className="text-lg font-bold text-red-600">
+                              {uploadResult.deduplicationStats.falsePositives}
+                            </div>
+                            <div className="text-xs text-gray-600 dark:text-gray-400">AI 排除误判</div>
+                          </div>
+                          <div className="p-3 border rounded-lg bg-purple-50 dark:bg-purple-950">
+                            <div className="text-lg font-bold text-purple-600">
+                              {uploadResult.deduplicationStats.mergedItems}
+                            </div>
+                            <div className="text-xs text-gray-600 dark:text-gray-400">已合并</div>
+                          </div>
+                          <div className="p-3 border rounded-lg bg-gray-50 dark:bg-gray-900">
+                            <div className="text-lg font-bold text-gray-600">
+                              {uploadResult.deduplicationStats.newItems}
+                            </div>
+                            <div className="text-xs text-gray-600 dark:text-gray-400">新增内容</div>
+                          </div>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          系统使用精确匹配、模糊匹配和 AI 判断三种方式检测重复内容
+                        </p>
+                      </div>
+                    )}
 
                     {/* 详细结果 */}
                     <div className="space-y-3">
