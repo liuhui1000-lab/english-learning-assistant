@@ -33,8 +33,7 @@ export interface BatchUploadProgress {
  */
 export async function parseDocxFile(file: File): Promise<string> {
   const arrayBuffer = await file.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
-  const result = await mammoth.extractRawText({ buffer });
+  const result = await mammoth.extractRawText({ arrayBuffer });
   return result.value;
 }
 
