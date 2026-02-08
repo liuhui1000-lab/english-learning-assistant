@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: '参数验证失败', details: error.errors },
+        { error: '参数验证失败', details: error.issues },
         { status: 400 }
       );
     }
