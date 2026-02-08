@@ -12,6 +12,7 @@ import {
   userWordFamilyProgress,
   type WordFamily,
   type Word,
+  type WordTransformation,
   type Collocation,
 } from './shared/schema';
 import { eq, and, desc, sql } from 'drizzle-orm';

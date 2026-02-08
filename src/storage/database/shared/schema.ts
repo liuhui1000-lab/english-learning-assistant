@@ -425,6 +425,12 @@ export const selectCollocationSchema = createSelectSchema(collocations)
 export type InsertCollocation = z.infer<typeof insertCollocationSchema>
 export type Collocation = z.infer<typeof selectCollocationSchema>
 
+export const insertWordTransformationSchema = createInsertSchema(wordTransformations)
+export const selectWordTransformationSchema = createSelectSchema(wordTransformations)
+export type InsertWordTransformation = z.infer<typeof insertWordTransformationSchema>
+// 使用 Drizzle 的类型推断，避免 jsonb 字段的兼容性问题
+export type WordTransformation = typeof wordTransformations.$inferSelect
+
 export const insertArticleSchema = createInsertSchema(articles)
 export const selectArticleSchema = createSelectSchema(articles)
 export type InsertArticle = z.infer<typeof insertArticleSchema>
