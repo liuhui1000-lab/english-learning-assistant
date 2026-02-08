@@ -281,7 +281,7 @@ export class WordFamilyManager {
       // 创建新记录
       await db.insert(userWordFamilyProgress).values({
         userId,
-        wordFamilyId,
+        wordFamilyId: familyId,
         reviewCount: 1,
         masteryLevel: 1,
         nextReviewAt: nextReviewDate.toISOString(),
