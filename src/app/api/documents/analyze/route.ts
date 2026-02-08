@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { S3Storage } from 'coze-coding-dev-sdk';
-import { getDb } from 'coze-coding-dev-sdk';
+import { getDb } from '@/utils/db';
 import { sql } from 'drizzle-orm';
 
 /**

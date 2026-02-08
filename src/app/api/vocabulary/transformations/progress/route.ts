@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb } from 'coze-coding-dev-sdk';
+import { getDb } from '@/utils/db';
 import { userTransformationProgress, wordTransformations } from '@/storage/database/shared/schema';
 import { eq, and, or, sql } from 'drizzle-orm';
 import { calculateNextReview, calculateMasteryLevel } from '@/utils/ebbinghaus';

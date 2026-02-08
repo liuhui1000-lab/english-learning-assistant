@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb } from 'coze-coding-dev-sdk';
+import { getDb } from '@/utils/db';
 import { userWordProgress } from '@/storage/database/shared/schema';
 import { eq, and, sql } from 'drizzle-orm';
 

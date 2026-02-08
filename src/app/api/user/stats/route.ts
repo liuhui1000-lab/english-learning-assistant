@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/utils/auth';
-import { getDb } from 'coze-coding-dev-sdk';
+import { getDb } from '@/utils/db';
 import { userWordProgress, grammarMistakes, transformationMistakes } from '@/storage/database/shared/schema';
 import { eq, sql } from 'drizzle-orm';
 

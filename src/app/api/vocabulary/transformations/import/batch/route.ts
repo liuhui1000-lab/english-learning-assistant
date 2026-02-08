@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { LLMClient, Config, getDb } from 'coze-coding-dev-sdk';
+import { LLMClient, Config } from 'coze-coding-dev-sdk';
+import { getDb } from '@/utils/db';
 import { sql } from 'drizzle-orm';
 import fs from 'fs';
 import path from 'path';

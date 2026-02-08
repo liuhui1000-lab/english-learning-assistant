@@ -1,5 +1,5 @@
 import { eq, and, SQL, sql } from "drizzle-orm";
-import { getDb } from "coze-coding-dev-sdk";
+import { getDb } from "@/utils/db";
 import {
   articles,
   userReadingProgress,

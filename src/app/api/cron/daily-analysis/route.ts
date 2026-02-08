@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb } from 'coze-coding-dev-sdk';
+import { getDb } from '@/utils/db';
 import { sql } from 'drizzle-orm';
 import { analyzeMistakesBatch, safeCallGemini } from '@/utils/gemini';
 import { sleep } from '@/utils/gemini';

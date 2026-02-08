@@ -3,7 +3,7 @@
  * 支持多个AI服务（Gemini、DeepSeek、Kimi、OpenAI、MiniMax、Claude）
  */
 
-import { getDb } from 'coze-coding-dev-sdk';
+import { getDb } from '@/utils/db';
 
 interface AIProvider {
   id: number;

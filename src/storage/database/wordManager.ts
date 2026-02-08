@@ -1,5 +1,5 @@
 import { eq, and, SQL, sql } from "drizzle-orm";
-import { getDb } from "coze-coding-dev-sdk";
+import { getDb } from "@/utils/db";
 import { words, userWordProgress, insertWordSchema, type Word, type InsertWord } from "./shared/schema";
 
 export class WordManager {

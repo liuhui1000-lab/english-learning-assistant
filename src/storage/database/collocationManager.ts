@@ -1,5 +1,5 @@
 import { eq, SQL, like } from "drizzle-orm";
-import { getDb } from "coze-coding-dev-sdk";
+import { getDb } from "@/utils/db";
 import { collocations, insertCollocationSchema, type Collocation, type InsertCollocation } from "./shared/schema";
 
 export class CollocationManager {

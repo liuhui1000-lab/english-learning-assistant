@@ -1,5 +1,5 @@
 import { eq, and, SQL, desc, sql } from "drizzle-orm";
-import { getDb } from "coze-coding-dev-sdk";
+import { getDb } from "@/utils/db";
 import {
   grammarPoints,
   grammarMistakes,
