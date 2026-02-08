@@ -29,6 +29,7 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const version = formData.get('version') as string;
+    const grade = formData.get('grade') as string || '8年级';
     const description = formData.get('description') as string;
 
     // 验证必填字段
@@ -96,9 +97,9 @@ export async function POST(request: NextRequest) {
 
     // 保存到不同的模块
     const results = {
-      grammar: await importGrammarExercises(groupedQuestions.grammar, version),
-      wordFormation: await importWordFormations(groupedQuestions.wordFormation, version),
-      reading: await importReadingComprehensions(groupedQuestions.reading, version),
+      grammar: await importGrammarExercises(groupedQuestions.grammar, version, grade),
+      wordFormation: await importWordFormations(groupedQuestions.wordFormation, version, grade),
+      reading: await importReadingComprehensions(groupedQuestions.reading, version, grade),
     };
 
     return NextResponse.json({
@@ -129,7 +130,8 @@ export async function POST(request: NextRequest) {
  */
 async function importGrammarExercises(
   questions: Question[],
-  version: string
+  version: string,
+  grade: string
 ): Promise<{ success: number; failed: number }> {
   const db = await getDb();
   let success = 0;
@@ -155,7 +157,7 @@ async function importGrammarExercises(
               name: question.knowledgePoint,
               category: question.subKnowledgePoint || '通用',
               description: `模拟卷 ${version} - ${question.knowledgePoint}`,
-              level: '8年级', // 初二
+              level: grade,
             })
             .returning();
 
@@ -201,7 +203,8 @@ async function importGrammarExercises(
  */
 async function importWordFormations(
   questions: Question[],
-  version: string
+  version: string,
+  grade: string
 ): Promise<{ success: number; failed: number }> {
   const db = await getDb();
   let success = 0;
@@ -222,8 +225,8 @@ async function importWordFormations(
       // 插入词转练习
       await query(
         `
-        INSERT INTO word_transformations (id, base_word, base_meaning, transformations, difficulty, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+        INSERT INTO word_transformations (id, base_word, base_meaning, transformations, difficulty, source_type, source_info, created_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
         ON CONFLICT DO NOTHING
         `,
         [
@@ -232,6 +235,8 @@ async function importWordFormations(
           '', // 基础词义，需要后续补充
           JSON.stringify(transformations),
           2, // 初二难度
+          'exam', // 来源：模拟卷
+          `${grade} - 模拟卷${version}`, // 年级和版本信息
         ]
       );
 
@@ -250,11 +255,22 @@ async function importWordFormations(
  */
 async function importReadingComprehensions(
   questions: Question[],
-  version: string
+  version: string,
+  grade: string
 ): Promise<{ success: number; failed: number }> {
   const db = await getDb();
   let success = 0;
   let failed = 0;
+
+  // 年级到阅读难度映射
+  const gradeToLevel: Record<string, string> = {
+    '6年级': 'beginner',
+    '7年级': 'elementary',
+    '8年级': 'intermediate',
+    '9年级': 'advanced',
+  };
+
+  const level = gradeToLevel[grade] || 'intermediate';
 
   for (const question of questions) {
     try {
@@ -262,12 +278,12 @@ async function importReadingComprehensions(
       const [article] = await db
         .insert(articles)
         .values({
-          title: `模拟卷 ${version} - 阅读理解`,
+          title: `${grade} - 模拟卷 ${version} - 阅读理解`,
           content: question.article || question.question,
-          level: 'intermediate', // 初二
+          level: level,
           wordCount: (question.article || question.question).length,
           readTime: Math.ceil((question.article || question.question).length / 200), // 粗略估算
-          category: '模拟卷',
+          category: `${grade} - 模拟卷`,
           questions: question.articleQuestions ? JSON.stringify(question.articleQuestions) : null,
         })
         .returning();

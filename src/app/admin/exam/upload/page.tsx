@@ -16,6 +16,13 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Upload,
   CheckCircle,
   XCircle,
@@ -53,6 +60,7 @@ export default function ExamUploadPage() {
 
   // 表单状态
   const [version, setVersion] = useState('');
+  const [grade, setGrade] = useState('8年级');
   const [description, setDescription] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
@@ -97,6 +105,7 @@ export default function ExamUploadPage() {
     const formData = new FormData();
     formData.append('file', selectedFile);
     formData.append('version', version);
+    formData.append('grade', grade);
     formData.append('description', description);
 
     try {
@@ -191,6 +200,22 @@ export default function ExamUploadPage() {
                     onChange={(e) => setVersion(e.target.value)}
                     disabled={isUploading}
                   />
+                </div>
+
+                {/* 年级 */}
+                <div className="space-y-2">
+                  <Label>年级 *</Label>
+                  <Select value={grade} onValueChange={setGrade} disabled={isUploading}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="6年级">6年级</SelectItem>
+                      <SelectItem value="7年级">7年级</SelectItem>
+                      <SelectItem value="8年级">8年级</SelectItem>
+                      <SelectItem value="9年级">9年级</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* 描述 */}
