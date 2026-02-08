@@ -10,7 +10,7 @@ import {
 } from "./shared/schema";
 
 export class GrammarManager {
-  async createGrammarPoint(name: string, description: string, category: string, level: number = 1): Promise<GrammarPoint> {
+  async createGrammarPoint(name: string, description: string, category: string, level: string = '8年级'): Promise<GrammarPoint> {
     const db = await getDb();
     const [point] = await db
       .insert(grammarPoints)
