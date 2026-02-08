@@ -78,7 +78,7 @@ interface UploadResult {
 }
 
 export type MergeStrategyType = 'replace' | 'append' | 'smart_merge' | 'skip';
-export type OCREngineType = 'tesseract' | 'paddleocr';
+export type OCREngineType = 'tesseract' | 'paddleocr' | 'baidu';
 
 export default function SmartImportPage() {
   const [uploadType, setUploadType] = useState('exam');
@@ -266,6 +266,32 @@ export default function SmartImportPage() {
           text: paddleResult.text,
           confidence: paddleResult.confidence,
           lines: paddleResult.lines,
+        };
+      } else if (ocrEngine === 'baidu') {
+        // 使用百度 OCR API
+        const { recognizeWithBaiduOCR } = await import('@/utils/baiduOCR');
+
+        const baiduResult = await recognizeWithBaiduOCR(
+          file,
+          {
+            detectDirection: true,  // 检测图像朝向
+            languageType: 'CHN_ENG',  // 中英文混合
+          },
+          (progress) => {
+            setOcrProgress(progress);
+            setUploadProgress(progress * 0.5); // OCR 占总进度的 50%
+          }
+        );
+
+        if (!baiduResult.success) {
+          alert(`百度 OCR 识别失败: ${baiduResult.error}`);
+          return;
+        }
+
+        ocrResult = {
+          text: baiduResult.text,
+          confidence: baiduResult.confidence,
+          lines: baiduResult.lines,
         };
       } else {
         // 使用 Tesseract.js
@@ -534,15 +560,27 @@ export default function SmartImportPage() {
                           <SelectItem value="paddleocr">
                             PaddleOCR API（推荐，识别效果好）
                           </SelectItem>
+                          <SelectItem value="baidu">
+                            百度 OCR API（国内首选）
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                       <p className="text-sm text-muted-foreground">
                         {ocrEngine === 'tesseract' && '免费开源，首次使用需要加载字库（约 10MB），完全在浏览器端运行。'}
                         {ocrEngine === 'paddleocr' && '官方 API，识别效果好，支持中英文混合，速度快。需要配置 API Token。'}
+                        {ocrEngine === 'baidu' && '百度智能云 OCR，国内访问速度快，识别效果优秀，支持高精度识别。需要配置 Access Token。'}
                       </p>
                     </div>
 
                     {/* 引擎说明 */}
+                    {ocrEngine === 'baidu' && (
+                      <Alert>
+                        <Sparkles className="h-4 w-4" />
+                        <AlertDescription>
+                          百度 OCR API 国内访问速度快，识别效果优秀，支持中英文混合识别和高精度识别。强烈推荐使用！
+                        </AlertDescription>
+                      </Alert>
+                    )}
                     {ocrEngine === 'paddleocr' && (
                       <Alert>
                         <Sparkles className="h-4 w-4" />

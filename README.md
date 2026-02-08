@@ -5,12 +5,13 @@
 ## 功能特点
 
 ### 0. 智能识别（OCR）
-- **双引擎支持**：Tesseract.js（免费） + PaddleOCR API（推荐）
+- **三引擎支持**：Tesseract.js（免费） + PaddleOCR API（推荐） + 百度 OCR（国内首选）
 - **图片文字识别**：自动从扫描件、截图提取文字
 - **中英文混合**：支持中英文混合识别
-- **手写文字**：PaddleOCR 支持手写文字识别
+- **手写文字**：百度 OCR 和 PaddleOCR 支持手写文字识别
+- **高精度识别**：百度 OCR 支持高精度识别
 - **多场景应用**：模拟卷、错题、单词表均可使用 OCR 识别
-- **识别效果**：PaddleOCR 识别准确率 > 95%
+- **识别效果**：百度 OCR 和 PaddleOCR 识别准确率 > 95%
 
 ### 1. 单词背诵
 - 卡片式学习界面
@@ -94,13 +95,30 @@ netlify deploy --prod
 在 Netlify 中设置以下环境变量：
 
 - `PGDATABASE_URL`: PostgreSQL 数据库连接字符串
+- `NEXT_PUBLIC_BAIDU_OCR_ACCESS_TOKEN`: 百度 OCR Access Token（推荐）
 - `NEXT_PUBLIC_PADDLE_OCR_API_URL`: PaddleOCR API 地址（可选）
 - `NEXT_PUBLIC_PADDLE_OCR_TOKEN`: PaddleOCR API Token（可选）
 - 其他必要的环境变量（已通过 SDK 自动加载）
 
-#### PaddleOCR 配置（可选）
+#### OCR 配置（可选）
 
-如果需要使用 PaddleOCR 进行图片文字识别，请配置以下环境变量：
+项目支持三个 OCR 引擎，可以根据需求选择配置：
+
+**推荐：百度 OCR（国内首选）**
+
+```env
+NEXT_PUBLIC_BAIDU_OCR_ACCESS_TOKEN=your_baidu_access_token_here
+```
+
+获取百度 OCR Access Token：
+1. 访问百度智能云：https://cloud.baidu.com/product/ocr
+2. 注册/登录百度账号
+3. 开通 OCR 服务（有免费额度：500次/天）
+4. 创建应用，获取 Access Token
+
+详细配置说明：[百度 OCR 快速开始](./BAIDU_OCR_QUICKSTART.md)
+
+**可选：PaddleOCR API**
 
 ```env
 NEXT_PUBLIC_PADDLE_OCR_API_URL=https://your-paddleocr-api.com/api/ocr
@@ -113,6 +131,10 @@ NEXT_PUBLIC_PADDLE_OCR_TOKEN=your_paddleocr_token_here
 3. 申请 API Token（100万次/月免费）
 
 详细配置说明：[PaddleOCR 快速开始](./PADDLE_OCR_QUICKSTART.md)
+
+**可选：Tesseract.js**
+
+无需配置，开箱即用，完全免费。
 
 ## API 接口
 
