@@ -98,11 +98,18 @@ export default function SmartImportPage() {
       setUploadResult(null);
       setPreviewText('');
 
+      // 检查文件类型
+      const fileExt = selectedFile.name.split('.').pop()?.toLowerCase() || '';
+
+      // 如果是大文件模式且选择的是PDF，自动关闭大文件模式
+      if (useBatchMode && fileExt === 'pdf') {
+        setUseBatchMode(false);
+        alert('PDF 文件不支持大文件模式，已自动切换为普通模式。建议将 PDF 转换为 DOCX 格式后使用大文件模式。');
+      }
+
       try {
-        // 检查文件类型
-        const fileExt = selectedFile.name.split('.').pop()?.toLowerCase() || '';
         const textFormats = ['txt', 'md', 'json', 'csv'];
-        
+
         if (textFormats.includes(fileExt)) {
           // 纯文本文件，直接读取
           const reader = new FileReader();
@@ -199,96 +206,44 @@ export default function SmartImportPage() {
       return;
     }
 
+    // 检查文件类型
+    const isPdf = file.name.toLowerCase().endsWith('.pdf');
+
+    if (isPdf) {
+      // PDF 文件不支持大文件模式
+      alert(
+        'PDF 文件不支持大文件模式。\n\n' +
+        '请将 PDF 转换为 DOCX 格式（推荐）：\n' +
+        '1. 使用 Microsoft Word 打开 PDF\n' +
+        '2. 另存为 Word 文档\n' +
+        '3. 重新上传 DOCX 文件\n\n' +
+        '或者使用普通模式上传（但可能会超时）。'
+      );
+      return;
+    }
+
     setIsUploading(true);
     setUploadProgress(0);
     setUploadResult(null);
     setBatchProgress(null);
 
     try {
-      // 检查文件类型
-      const isPdf = file.name.toLowerCase().endsWith('.pdf');
+      // DOCX 文件：直接在浏览器端解析
+      console.log('[批量上传] 检测到 DOCX 文件，使用浏览器端解析');
 
-      if (isPdf) {
-        // PDF 文件：先在服务器端解析，然后分批上传
-        console.log('[批量上传] 检测到 PDF 文件，使用服务器端解析');
+      // 动态导入wordFileProcessor
+      const { processWordFile } = await import('@/utils/wordFileProcessor');
 
-        // 更新进度：正在解析
-        setUploadProgress(10);
-        setBatchProgress({
-          totalWords: 0,
-          processedWords: 0,
-          currentBatch: 0,
-          totalBatches: 0,
-          percentage: 10,
-          stage: '正在解析 PDF 文件',
-          newWords: 0,
-          updatedWords: 0,
-          failedWords: 0,
-          status: 'parsing',
-        });
+      // 处理文件
+      const result = await processWordFile(file, 100, (progress) => {
+        setBatchProgress(progress);
+        setUploadProgress(progress.percentage);
+      });
 
-        // 调用服务器端解析 API
-        const formData = new FormData();
-        formData.append('file', file);
-
-        const parseResponse = await fetch('/api/admin/words/parse-pdf', {
-          method: 'POST',
-          body: formData,
-        });
-
-        if (!parseResponse.ok) {
-          const error = await parseResponse.json();
-          throw new Error(error.error || 'PDF 解析失败');
-        }
-
-        const parseResult = await parseResponse.json();
-
-        if (!parseResult.success) {
-          throw new Error('PDF 解析失败');
-        }
-
-        // 使用解析后的文本
-        const { extractWordsFromText, uploadWordsInBatches } = await import('@/utils/wordFileProcessor');
-        const text = parseResult.data.text;
-
-        console.log('[批量上传] PDF 解析完成，开始提取单词');
-        const words = extractWordsFromText(text);
-
-        if (words.length === 0) {
-          throw new Error('未能从 PDF 中提取到单词');
-        }
-
-        console.log('[批量上传] 提取到', words.length, '个单词');
-
-        // 分批上传
-        const result = await uploadWordsInBatches(words, 100, (progress) => {
-          setBatchProgress(progress);
-          setUploadProgress(progress.percentage);
-        });
-
-        if (result.success) {
-          alert(`上传成功！\n总共 ${result.totalWords} 个单词\n新增 ${result.newWords} 个\n更新 ${result.updatedWords} 个\n失败 ${result.failedWords} 个`);
-        } else {
-          alert('上传失败');
-        }
+      if (result.success) {
+        alert(`上传成功！\n总共 ${result.totalWords} 个单词\n新增 ${result.newWords} 个\n更新 ${result.updatedWords} 个\n失败 ${result.failedWords} 个`);
       } else {
-        // DOCX 文件：直接在浏览器端解析
-        console.log('[批量上传] 检测到 DOCX 文件，使用浏览器端解析');
-
-        // 动态导入wordFileProcessor
-        const { processWordFile } = await import('@/utils/wordFileProcessor');
-
-        // 处理文件
-        const result = await processWordFile(file, 100, (progress) => {
-          setBatchProgress(progress);
-          setUploadProgress(progress.percentage);
-        });
-
-        if (result.success) {
-          alert(`上传成功！\n总共 ${result.totalWords} 个单词\n新增 ${result.newWords} 个\n更新 ${result.updatedWords} 个\n失败 ${result.failedWords} 个`);
-        } else {
-          alert('上传失败');
-        }
+        alert('上传失败');
       }
     } catch (error) {
       console.error('批量上传失败:', error);
@@ -372,12 +327,18 @@ export default function SmartImportPage() {
                 <Label>选择文件</Label>
                 <Input
                   type="file"
-                  accept=".txt,.md,.json,.csv,.docx,.pdf"
+                  accept={
+                    uploadType === 'words' && useBatchMode
+                      ? '.docx'
+                      : '.txt,.md,.json,.csv,.docx,.pdf'
+                  }
                   onChange={handleFileChange}
                   disabled={isUploading}
                 />
                 <p className="text-sm text-muted-foreground">
-                  支持的格式：TXT, MD, JSON, CSV, DOCX, PDF
+                  {uploadType === 'words' && useBatchMode
+                    ? '大文件模式仅支持 DOCX 格式。PDF 请转换为 DOCX 或使用普通模式。'
+                    : '支持的格式：TXT, MD, JSON, CSV, DOCX, PDF'}
                 </p>
               </div>
 
@@ -398,6 +359,18 @@ export default function SmartImportPage() {
                     />
                   </div>
 
+                  {/* PDF 文件提示 */}
+                  {file && file.name.toLowerCase().endsWith('.pdf') && (
+                    <Alert variant="destructive">
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertDescription>
+                        <strong>PDF 文件支持有限：</strong><br />
+                        推荐方案：将 PDF 转换为 DOCX 格式（使用 Word 或在线工具），然后重新上传。<br />
+                        备选方案：使用普通模式上传（但可能超时）。
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
                   {/* 文件大小提示 */}
                   {file && file.size > 10 * 1024 * 1024 && !useBatchMode && !file.name.toLowerCase().endsWith('.pdf') && (
                     <Alert variant="destructive">
@@ -408,13 +381,11 @@ export default function SmartImportPage() {
                     </Alert>
                   )}
 
-                  {useBatchMode && file && (
+                  {useBatchMode && file && !file.name.toLowerCase().endsWith('.pdf') && (
                     <Alert>
                       <Info className="h-4 w-4" />
                       <AlertDescription>
-                        {file.name.toLowerCase().endsWith('.pdf')
-                          ? 'PDF 文件将在服务器端解析，然后分批上传。'
-                          : 'DOCX 文件将在浏览器端解析并分批上传，不受服务器超时限制。'}
+                        DOCX 文件将在浏览器端解析并分批上传，不受服务器超时限制。
                       </AlertDescription>
                     </Alert>
                   )}

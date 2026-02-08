@@ -53,10 +53,16 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('[PDF解析] 解析失败:', error);
+    console.error('[PDF解析] 错误详情:', {
+      message: error instanceof Error ? error.message : '未知错误',
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : undefined,
+    });
 
     return NextResponse.json(
       {
         error: error instanceof Error ? error.message : 'PDF 解析失败',
+        details: error instanceof Error ? error.stack : undefined,
       },
       { status: 500 }
     );
