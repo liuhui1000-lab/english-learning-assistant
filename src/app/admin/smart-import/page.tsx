@@ -106,14 +106,21 @@ export default function SmartImportPage() {
       const fileExt = selectedFile.name.split('.').pop()?.toLowerCase() || '';
       const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
       const isImage = imageExtensions.includes(fileExt);
+      const isPDF = fileExt === 'pdf';
 
       // 如果是图片，自动启用 OCR
       if (isImage && !useOCR) {
         setUseOCR(true);
       }
 
+      // 如果是 PDF，自动关闭 OCR（PDF 不是图片，不能直接用 OCR）
+      if (isPDF && useOCR) {
+        setUseOCR(false);
+        alert('PDF 文件不是图片格式，不能直接使用 OCR 识别。系统会自动解析 PDF 文件中的文字。');
+      }
+
       // 如果是大文件模式且选择的是PDF，自动关闭大文件模式
-      if (useBatchMode && fileExt === 'pdf') {
+      if (useBatchMode && isPDF) {
         setUseBatchMode(false);
         alert('PDF 文件不支持大文件模式，已自动切换为普通模式。建议将 PDF 转换为 DOCX 格式后使用大文件模式。');
       }
@@ -154,6 +161,19 @@ export default function SmartImportPage() {
     const fileExt = file.name.split('.').pop()?.toLowerCase() || '';
     const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
     const isImage = imageExtensions.includes(fileExt);
+    const isPDF = fileExt === 'pdf';
+
+    // 检查是否同时使用 OCR 和 PDF（不允许）
+    if (useOCR && isPDF) {
+      alert(
+        '错误：不能同时对 PDF 文件使用 OCR 识别。\n\n' +
+        '原因：PDF 不是图片格式，OCR 仅用于从图片中提取文字。\n\n' +
+        '解决方案：\n' +
+        '1. 关闭"OCR 识别"开关，系统会自动解析 PDF 文件中的文字。\n' +
+        '2. 或者将 PDF 转换为图片格式，然后使用 OCR 识别。'
+      );
+      return;
+    }
 
     // 如果是图片且启用 OCR，先进行 OCR 识别
     if (isImage && useOCR) {
@@ -543,6 +563,17 @@ export default function SmartImportPage() {
                     disabled={isUploading}
                   />
                 </div>
+
+                {/* PDF 警告 */}
+                {file && file.name.toLowerCase().endsWith('.pdf') && useOCR && (
+                  <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>
+                      <strong>警告：</strong>PDF 文件不是图片格式，不能直接使用 OCR 识别。<br />
+                      系统会自动解析 PDF 文件中的文字。请关闭"OCR 识别"开关后上传。
+                    </AlertDescription>
+                  </Alert>
+                )}
 
                 {useOCR && (
                   <>

@@ -19,15 +19,35 @@ export interface ParseResult {
  */
 async function parsePDF(buffer: Buffer): Promise<string> {
   try {
+    console.log('[parsePDF] 开始加载 pdf-parse 模块');
     // 使用动态导入
     const pdfModule = await import('pdf-parse');
+    console.log('[parsePDF] pdf-parse 模块加载成功');
+
     // pdf-parse 可能同时有 default 和命名导出
     const pdf = (pdfModule as any).default || pdfModule;
+    console.log('[parsePDF] 开始解析 PDF，buffer 大小:', buffer.length);
+
     const pdfResult = await pdf(buffer);
+    console.log('[parsePDF] PDF 解析完成，文本长度:', pdfResult.text?.length || 0);
+
     return pdfResult.text;
   } catch (error) {
     console.error('[parsePDF] 解析失败:', error);
-    throw new Error('PDF 解析失败，请确保文件格式正确');
+
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    console.error('[parsePDF] 错误详情:', errorMessage);
+
+    // 如果是 Netlify 环境，可能是 pdf-parse 加载失败
+    if (errorMessage.includes('Cannot find module') || errorMessage.includes('module not found')) {
+      throw new Error(
+        'PDF 解析模块加载失败。Netlify 环境可能不支持 PDF 解析。建议将 PDF 转换为 DOCX 或 TXT 格式后再上传。'
+      );
+    }
+
+    throw new Error(
+      `PDF 解析失败: ${errorMessage}。请确保文件格式正确，或转换为 DOCX/TXT 格式后重试。`
+    );
   }
 }
 
