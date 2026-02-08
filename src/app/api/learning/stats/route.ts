@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const gradeSemester = searchParams.get('gradeSemester') || '8年级下学期';
 
-    const stats = await getUserLearningStats(user.id, gradeSemester);
+    const stats = await getUserLearningStats(user.userId, gradeSemester);
 
     return NextResponse.json({
       success: true,
