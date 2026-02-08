@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { checkPermission } from '@/utils/auth';
 import { getDb } from '@/utils/db';
-import { sql } from 'drizzle-orm';
+import { sql, or, eq } from 'drizzle-orm';
 import { words } from '@/storage/database/shared/schema';
 
 export const dynamic = 'force-dynamic';
@@ -55,10 +55,15 @@ export async function POST(request: NextRequest) {
     const allWordsLower = wordsWithLower.map(w => w.wordLower);
     console.log('[批量上传调试] 查询单词列表:', allWordsLower.slice(0, 5));
 
-    // 使用原生 SQL 查询，因为需要 LOWER() 函数
-    const existingWordsResult = await db.execute(
-      sql`SELECT * FROM words WHERE LOWER(word) = ANY(${allWordsLower})`
+    // 使用 OR 条件查询已存在的单词（支持大小写不敏感）
+    const conditions = allWordsLower.map(word => 
+      eq(sql`LOWER(${words.word})`, word)
     );
+    
+    const existingWordsResult = await db
+      .select()
+      .from(words)
+      .where(or(...conditions));
 
     console.log('[批量上传调试] 已存在单词数:', existingWordsResult.rows.length);
     if (existingWordsResult.rows.length > 0) {

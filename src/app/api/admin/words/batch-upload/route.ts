@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/utils/db';
 import { words } from '@/storage/database/shared/schema';
-import { eq, sql, inArray } from 'drizzle-orm';
+import { eq, sql, inArray, or } from 'drizzle-orm';
 import { checkPermission } from '@/utils/auth';
 
 export async function POST(request: NextRequest) {
@@ -58,10 +58,15 @@ export async function POST(request: NextRequest) {
     console.log(`[批量上传] 查询已存在单词，数量: ${allWordsLower.length}`);
     console.log(`[批量上传] 单词列表:`, allWordsLower.slice(0, 10));
 
-    // 使用原生 SQL 查询，因为需要 LOWER() 函数
-    const existingWordsResult = await db.execute(
-      sql`SELECT * FROM words WHERE LOWER(word) = ANY(${allWordsLower})`
+    // 使用 OR 条件查询已存在的单词（支持大小写不敏感）
+    const conditions = allWordsLower.map(word => 
+      eq(sql`LOWER(${words.word})`, word)
     );
+    
+    const existingWordsResult = await db
+      .select()
+      .from(words)
+      .where(or(...conditions));
 
     console.log(`[批量上传] 查询结果: 已存在 ${existingWordsResult.rows.length} 个单词`);
     if (existingWordsResult.rows.length > 0) {
