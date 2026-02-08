@@ -24,14 +24,11 @@ import {
   Sparkles,
   BookOpen,
   PenTool,
-  Eye,
-  Clock,
   Zap,
   FileJson,
   FileSpreadsheet,
-  Download,
   RefreshCw,
-  Play,
+  Eye,
 } from 'lucide-react';
 
 interface UploadResult {
@@ -52,18 +49,7 @@ interface UploadResult {
   };
 }
 
-interface LibraryVersion {
-  id: number;
-  library_type: string;
-  version: string;
-  description: string;
-  is_active: boolean;
-  created_at: string;
-  item_count: number;
-}
-
 export default function SmartImportPage() {
-  const [activeTab, setActiveTab] = useState('upload');
   const [uploadType, setUploadType] = useState('exam');
   const [file, setFile] = useState<File | null>(null);
   const [version, setVersion] = useState('');
@@ -72,27 +58,6 @@ export default function SmartImportPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
-  const [versions, setVersions] = useState<LibraryVersion[]>([]);
-  const [loadingVersions, setLoadingVersions] = useState(true);
-
-  // 加载题库版本
-  useEffect(() => {
-    loadVersions();
-  }, []);
-
-  const loadVersions = async () => {
-    try {
-      const response = await fetch('/api/admin/library/versions');
-      const data = await response.json();
-      if (data.success) {
-        setVersions(data.data);
-      }
-    } catch (error) {
-      console.error('加载题库版本失败:', error);
-    } finally {
-      setLoadingVersions(false);
-    }
-  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -172,7 +137,6 @@ export default function SmartImportPage() {
         setUploadResult(data.data);
         setUploadProgress(100);
         alert('上传成功！');
-        loadVersions();
       } else {
         alert(`上传失败：${data.error}`);
       }
@@ -181,27 +145,6 @@ export default function SmartImportPage() {
       alert('上传失败');
     } finally {
       setIsUploading(false);
-    }
-  };
-
-  const handleActivateVersion = async (versionId: number) => {
-    if (!confirm('确定要激活这个版本吗？')) return;
-
-    try {
-      const response = await fetch(`/api/admin/library/versions/${versionId}/activate`, {
-        method: 'POST',
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        alert('激活成功！');
-        loadVersions();
-      } else {
-        alert(`激活失败：${data.error}`);
-      }
-    } catch (error) {
-      console.error('激活失败:', error);
-      alert('激活失败');
     }
   };
 
@@ -235,14 +178,13 @@ export default function SmartImportPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">智能导入</h1>
         <p className="text-muted-foreground mt-2">
-          支持多种格式的智能导入和题库版本管理
+          支持多种格式的智能导入，自动识别并分配到对应的题库
         </p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+      <Tabs value="upload" className="space-y-6">
         <TabsList>
           <TabsTrigger value="upload">文件导入</TabsTrigger>
-          <TabsTrigger value="versions">版本管理</TabsTrigger>
         </TabsList>
 
         <TabsContent value="upload" className="space-y-6">
@@ -466,75 +408,6 @@ export default function SmartImportPage() {
                     </div>
                   </CardContent>
                 </Card>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="versions" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="w-5 h-5" />
-                题库版本管理
-              </CardTitle>
-              <CardDescription>
-                管理各个题库的版本，支持激活和回滚
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {loadingVersions ? (
-                <div className="flex items-center justify-center py-8">
-                  <RefreshCw className="w-6 h-6 animate-spin" />
-                </div>
-              ) : versions.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  暂无版本记录
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {versions.map((version) => (
-                    <div
-                      key={version.id}
-                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                          {getTypeIcon(version.library_type)}
-                        </div>
-                        <div>
-                          <div className="font-medium flex items-center gap-2">
-                            {getTypeLabel(version.library_type)}
-                            <Badge variant={version.is_active ? 'default' : 'secondary'}>
-                              {version.is_active ? '当前激活' : '未激活'}
-                            </Badge>
-                          </div>
-                          <div className="text-sm text-gray-600 dark:text-gray-400">
-                            版本 {version.version} • {version.item_count} 条记录
-                          </div>
-                          <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                            {version.description || '无描述'}
-                          </div>
-                          <div className="text-xs text-gray-500 dark:text-gray-500">
-                            创建于 {new Date(version.created_at).toLocaleString()}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        {!version.is_active && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleActivateVersion(version.id)}
-                          >
-                            <Play className="w-4 h-4 mr-2" />
-                            激活
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
               )}
             </CardContent>
           </Card>

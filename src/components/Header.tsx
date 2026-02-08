@@ -213,9 +213,9 @@ export function Header() {
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
-                          <Link href="/admin/library" className="flex items-center gap-2 cursor-pointer">
+                          <Link href="/admin/smart-import" className="flex items-center gap-2 cursor-pointer">
                             <Settings className="h-4 w-4" />
-                            <span>题库管理</span>
+                            <span>智能导入</span>
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
