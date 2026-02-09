@@ -170,7 +170,7 @@ export async function POST(request: NextRequest) {
       const totalTime = Date.now() - startTime;
       console.log(`[单词上传] 处理完成，总耗时: ${totalTime}ms`, {
         totalWords: parsedWords.length,
-        newWords: newWords.length,
+        newWords: newWordsData.length,
         updatedWords: wordsToUpdate.length,
       });
 
