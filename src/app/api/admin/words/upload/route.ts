@@ -51,17 +51,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 验证文件大小（限制 1MB）
-    if (file.size > 1024 * 1024) {
+    // 验证文件大小（放宽到 50MB，注：Netlify 仍有 6MB 限制，建议大文件分片）
+    if (file.size > 50 * 1024 * 1024) {
       return NextResponse.json(
-        { error: '文件过大，请上传不超过 1MB 的文件' },
+        { error: '文件过大，单次上传请不超过 50MB' },
         { status: 400 }
       );
     }
 
-    // 创建超时控制 Promise（8秒，留2秒给 Netlify）
+    // 创建超时控制 Promise（15秒，给予更多处理时间）
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('请求处理超时，请使用"大文件模式"上传')), 8000);
+      setTimeout(() => reject(new Error('请求处理超时，请分批上传或检查网络')), 15000);
     });
 
     // 创建处理 Promise
@@ -70,117 +70,34 @@ export async function POST(request: NextRequest) {
       console.log(`[单词上传] 开始处理文件: ${file.name}, 大小: ${file.size} bytes`);
 
       // 解析文件内容
-      console.log(`[单词上传] [${Date.now() - startTime}ms] 开始解析文件`);
-      let text = '';
-
-      try {
-        const parseResult = await parseFile(file);
-        text = parseResult.text;
-
-        if (parseResult.warnings.length > 0) {
-          console.warn('[单词上传] 解析警告:', parseResult.warnings);
-        }
-        console.log(`[单词上传] [${Date.now() - startTime}ms] 文件解析完成`);
-      } catch (error) {
-        throw new Error(error instanceof Error ? error.message : '文件解析失败');
-      }
+      const parseResult = await parseFile(file);
+      const text = parseResult.text;
 
       if (!text.trim()) {
         throw new Error('文件内容为空');
       }
 
       // 首先尝试规则解析
-      console.log(`[单词上传] [${Date.now() - startTime}ms] 尝试规则解析`);
       let parsedWords = await parseWordDocument(text, {
         fetchPronunciation: true,
         fetchPartOfSpeech: true,
         fetchExample: includeExamples,
       });
 
-      console.log(`[单词上传] [${Date.now() - startTime}ms] 规则解析完成`, {
-        success: parsedWords.length > 0,
-        wordCount: parsedWords.length,
-        firstWord: parsedWords.length > 0 ? parsedWords[0] : null,
-      });
-
       // 如果规则解析失败或结果为空，尝试 AI 解析
       if (parsedWords.length === 0) {
-        console.log('[单词上传] 规则解析失败，尝试 AI 智能解析');
-        console.log('[单词上传] 文本内容长度:', text.length);
-        console.log('[单词上传] 文本内容预览（前500字符）:', text.substring(0, 500));
-
         try {
           const { parseWordsWithAI } = await import('@/utils/aiHelper');
-
-          const aiPromise = parseWordsWithAI(text, {
+          const aiResult: any = await parseWordsWithAI(text, {
             includeExamples,
-            timeout: 7000,
+            timeout: 10000,
           });
 
-          const aiResult: any = await Promise.race([
-            aiPromise,
-            new Promise((_, reject) => setTimeout(() => reject(new Error('AI 解析超时')), 8000))
-          ]);
-
-          console.log('[单词上传] AI 解析结果:', {
-            success: aiResult.success,
-            wordCount: aiResult.words?.length || 0,
-            error: aiResult.error,
-          });
-
-          if (aiResult.success && aiResult.words && aiResult.words.length > 0) {
+          if (aiResult.success && aiResult.words?.length > 0) {
             parsedWords = aiResult.words;
-            console.log('[单词上传] AI 解析成功，解析到', parsedWords.length, '个单词');
-          } else {
-            console.error('[单词上传] AI 解析失败:', aiResult.error);
           }
         } catch (error) {
           console.error('[单词上传] AI 解析异常:', error);
-
-          // 如果是超时错误，尝试使用更简单的规则
-          if (error instanceof Error && error.message.includes('超时')) {
-            console.log('[单词上传] AI 超时，尝试提取简单单词列表');
-
-            const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-            const simpleWords = lines
-              .map(line => {
-                const match = line.match(/^([a-zA-Z]+)/);
-                return match ? match[1].toLowerCase() : null;
-              })
-              .filter((w): w is string => w !== null && w.length > 1);
-
-            if (simpleWords.length > 0) {
-              console.log('[单词上传] 提取到', simpleWords.length, '个简单单词');
-
-              const { fetchDictionaryWithCache } = await import('@/utils/dictionary');
-              for (const word of simpleWords) {
-                try {
-                  const dictData = await fetchDictionaryWithCache(word);
-                  if (dictData) {
-                    parsedWords.push({
-                      word: word,
-                      pronunciation: dictData.pronunciation || '',
-                      partOfSpeech: dictData.partOfSpeech || '',
-                      definition: dictData.definition || '',
-                      example: '',
-                      exampleTranslation: '',
-                    });
-                  } else {
-                    parsedWords.push({
-                      word: word,
-                      pronunciation: '',
-                      partOfSpeech: '',
-                      definition: '',
-                      example: '',
-                      exampleTranslation: '',
-                    });
-                  }
-                } catch (e) {
-                  // 忽略单个单词的错误
-                }
-              }
-            }
-          }
         }
       }
 
@@ -188,34 +105,26 @@ export async function POST(request: NextRequest) {
         throw new Error('未能从文档中解析出单词');
       }
 
-      console.log(`[单词上传] [${Date.now() - startTime}ms] 成功解析 ${parsedWords.length} 个单词`);
-
-      // 保存到数据库（使用批量操作）
-      console.log(`[单词上传] [${Date.now() - startTime}ms] 开始数据库操作`);
+      // 保存到数据库
       const db = await getDb();
+      const allWords = parsedWords.map(w => w.word);
+
+      // 分批查询已存在单词
+      const QUERY_BATCH_SIZE = 100;
+      const existingWordsResult = [];
+      for (let i = 0; i < allWords.length; i += QUERY_BATCH_SIZE) {
+        const batch = allWords.slice(i, i + QUERY_BATCH_SIZE);
+        const batchResult = await db.select().from(words).where(inArray(words.word, batch));
+        existingWordsResult.push(...batchResult);
+      }
+
+      const existingWordsMap = new Map(existingWordsResult.map(w => [w.word, w]));
       const insertedWords = [];
 
-      // 批量检查已存在的单词
-      const allWords = parsedWords.map(w => w.word);
-      const existingWordsResult = await db
-        .select()
-        .from(words)
-        .where(inArray(words.word, allWords));
-
-      console.log(`[单词上传] [${Date.now() - startTime}ms] 查询已存在单词完成`, {
-        total: allWords.length,
-        existing: existingWordsResult.length,
-      });
-
-      const existingWordsMap = new Map(
-        existingWordsResult.map(w => [w.word, w])
-      );
-
-      // 批量插入新单词
-      const newWords = parsedWords.filter(w => !existingWordsMap.has(w.word));
-      console.log(`[单词上传] [${Date.now() - startTime}ms] 准备插入新单词`, { count: newWords.length });
-      if (newWords.length > 0) {
-        const insertData = newWords.map(wordData => ({
+      // 1. 批量插入新单词
+      const newWordsData = parsedWords
+        .filter(w => !existingWordsMap.has(w.word))
+        .map(wordData => ({
           word: wordData.word,
           phonetic: wordData.pronunciation || '',
           meaning: wordData.definition || '',
@@ -224,32 +133,38 @@ export async function POST(request: NextRequest) {
           difficulty: 1,
         }));
 
-        const inserted = await db
-          .insert(words)
-          .values(insertData)
-          .returning();
-
-        insertedWords.push(...inserted);
-        console.log(`[单词上传] [${Date.now() - startTime}ms] 插入新单词完成`, { count: inserted.length });
+      if (newWordsData.length > 0) {
+        const INSERT_BATCH_SIZE = 50;
+        for (let i = 0; i < newWordsData.length; i += INSERT_BATCH_SIZE) {
+          const batch = newWordsData.slice(i, i + INSERT_BATCH_SIZE);
+          const inserted = await db.insert(words).values(batch).returning();
+          insertedWords.push(...inserted);
+        }
       }
 
-      // 批量更新已存在的单词
+      // 2. 优化更新：使用事务分批更新
       const wordsToUpdate = parsedWords.filter(w => existingWordsMap.has(w.word));
-      console.log(`[单词上传] [${Date.now() - startTime}ms] 准备更新已存在单词`, { count: wordsToUpdate.length });
-      for (const wordData of wordsToUpdate) {
-        const existingWord = existingWordsMap.get(wordData.word)!;
-        const updated = await db
-          .update(words)
-          .set({
-            phonetic: wordData.pronunciation || existingWord.phonetic,
-            meaning: wordData.definition || existingWord.meaning,
-            example: wordData.example || existingWord.example,
-            exampleTranslation: wordData.exampleTranslation || existingWord.exampleTranslation,
-          })
-          .where(eq(words.id, existingWord.id))
-          .returning();
-
-        insertedWords.push(updated[0]);
+      if (wordsToUpdate.length > 0) {
+        const UPDATE_BATCH_SIZE = 20;
+        for (let i = 0; i < wordsToUpdate.length; i += UPDATE_BATCH_SIZE) {
+          const batch = wordsToUpdate.slice(i, i + UPDATE_BATCH_SIZE);
+          await db.transaction(async (tx) => {
+            for (const wordData of batch) {
+              const existingWord = existingWordsMap.get(wordData.word)!;
+              const [updated] = await tx
+                .update(words)
+                .set({
+                  phonetic: wordData.pronunciation || existingWord.phonetic,
+                  meaning: wordData.definition || existingWord.meaning,
+                  example: wordData.example || existingWord.example,
+                  exampleTranslation: wordData.exampleTranslation || existingWord.exampleTranslation,
+                })
+                .where(eq(words.id, existingWord.id))
+                .returning();
+              insertedWords.push(updated);
+            }
+          });
+        }
       }
 
       const totalTime = Date.now() - startTime;
@@ -266,10 +181,10 @@ export async function POST(request: NextRequest) {
           fileName: file.name,
           totalWords: parsedWords.length,
           insertedWords: insertedWords.length,
-          newWords: newWords.length,
+          newWords: newWordsData.length,
           updatedWords: wordsToUpdate.length,
         },
-        message: `成功导入 ${insertedWords.length} 个单词（${newWords.length} 个新单词，${wordsToUpdate.length} 个已更新）`,
+        message: `成功导入 ${insertedWords.length} 个单词（${newWordsData.length} 个新单词，${wordsToUpdate.length} 个已更新）`,
       };
     })();
 
