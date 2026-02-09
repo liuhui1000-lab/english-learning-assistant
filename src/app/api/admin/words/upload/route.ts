@@ -105,9 +105,24 @@ export async function POST(request: NextRequest) {
         throw new Error('未能从文档中解析出单词');
       }
 
+      // 数据去重：保留第一个出现的单词，移除后续重复项
+      const uniqueParsedWordsMap = new Map();
+      for (const w of parsedWords) {
+        if (!w.word) continue;
+        const normalizedWord = w.word.trim();
+        if (!uniqueParsedWordsMap.has(normalizedWord)) {
+          // 确保 word 字段也是处理过的
+          uniqueParsedWordsMap.set(normalizedWord, { ...w, word: normalizedWord });
+        }
+      }
+      const uniqueParsedWords = Array.from(uniqueParsedWordsMap.values());
+      const duplicateCount = parsedWords.length - uniqueParsedWords.length;
+
+      console.log(`[单词上传] [${Date.now() - startTime}ms] 解析完成: 总数 ${parsedWords.length}, 去重后 ${uniqueParsedWords.length}, 重复 ${duplicateCount}`);
+
       // 保存到数据库
       const db = await getDb();
-      const allWords = parsedWords.map(w => w.word);
+      const allWords = uniqueParsedWords.map(w => w.word);
 
       // 分批查询已存在单词
       const QUERY_BATCH_SIZE = 100;
@@ -122,7 +137,7 @@ export async function POST(request: NextRequest) {
       const insertedWords = [];
 
       // 1. 批量插入新单词
-      const newWordsData = parsedWords
+      const newWordsData = uniqueParsedWords
         .filter(w => !existingWordsMap.has(w.word))
         .map(wordData => ({
           word: wordData.word,
@@ -143,7 +158,7 @@ export async function POST(request: NextRequest) {
       }
 
       // 2. 优化更新：使用事务分批更新
-      const wordsToUpdate = parsedWords.filter(w => existingWordsMap.has(w.word));
+      const wordsToUpdate = uniqueParsedWords.filter(w => existingWordsMap.has(w.word));
       if (wordsToUpdate.length > 0) {
         const UPDATE_BATCH_SIZE = 20;
         for (let i = 0; i < wordsToUpdate.length; i += UPDATE_BATCH_SIZE) {
@@ -169,7 +184,8 @@ export async function POST(request: NextRequest) {
 
       const totalTime = Date.now() - startTime;
       console.log(`[单词上传] 处理完成，总耗时: ${totalTime}ms`, {
-        totalWords: parsedWords.length,
+        totalParsed: parsedWords.length,
+        uniqueWords: uniqueParsedWords.length,
         newWords: newWordsData.length,
         updatedWords: wordsToUpdate.length,
       });
@@ -179,12 +195,13 @@ export async function POST(request: NextRequest) {
         data: {
           version,
           fileName: file.name,
-          totalWords: parsedWords.length,
+          totalWords: uniqueParsedWords.length, // 返回去重后的数量，避免前端显示"失败"
           insertedWords: insertedWords.length,
           newWords: newWordsData.length,
           updatedWords: wordsToUpdate.length,
+          duplicateWords: duplicateCount, // 可选：告诉前端有多少重复被忽略
         },
-        message: `成功导入 ${insertedWords.length} 个单词（${newWordsData.length} 个新单词，${wordsToUpdate.length} 个已更新）`,
+        message: `成功导入 ${insertedWords.length} 个单词（新增 ${newWordsData.length}，更新 ${wordsToUpdate.length}，忽略重复 ${duplicateCount}）`,
       };
     })();
 
